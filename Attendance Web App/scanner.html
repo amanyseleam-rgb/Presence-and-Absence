@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محطة مسح الباركود السريع - مدرسة السادات الابتدائية</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <style>
+        .scanner-station {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            padding: 25px;
+        }
+
+        .scan-hero {
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            color: white;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .scan-input-box {
+            background: #ffffff;
+            border: 3px solid #6366f1;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px 0;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .scan-feed {
+            max-height: 280px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+
+        .feed-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feed-item:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="attendance-header" style="background: linear-gradient(135deg,#4338ca,#6366f1);">
+        <div class="back-home">
+            <button onclick="window.location.href='attendance.html'">🔙 العودة لصفحة الحضور</button>
+        </div>
+        <h1>📷 محطة مسح الباركود السريع</h1>
+        <p>مسح الحضور الفوري بأجهزة القارئ اللاسلكية والـ USB وكاميرا الجوال</p>
+    </header>
+
+    <main class="attendance-container">
+
+        <div class="scanner-station">
+
+            <!-- Class & Date Selection Bar -->
+            <div class="top-bar" style="margin-bottom: 20px;">
+                <div>
+                    <label for="gradeSelect">📚 الصف الدراسي</label>
+                    <select id="gradeSelect" onchange="handleGradeChange()">
+                        <option value="">اختر الصف</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="classSelect">🏫 الفصل الدراسي</label>
+                    <select id="classSelect" onchange="handleClassChange()">
+                        <option value="">اختر الفصل</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="scanDate">📅 التاريخ</label>
+                    <input type="date" id="scanDate" onchange="handleClassChange()">
+                </div>
+                <div>
+                    <label>⚙️ وضع الرصد</label>
+                    <select id="scanMode">
+                        <option value="حاضر">🟢 رصد حاضر</option>
+                        <option value="متأخر">⏳ رصد متأخر</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Live Session Counters -->
+            <div class="stats" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 20px;">
+                <div class="stat-card">
+                    <span>👥</span>
+                    <div>
+                        <strong id="counterTotal">0</strong>
+                        <small>إجمالي الفصل</small>
+                    </div>
+                </div>
+                <div class="stat-card present-stat">
+                    <span>🟢</span>
+                    <div>
+                        <strong id="counterPresent">0</strong>
+                        <small>حاضر</small>
+                    </div>
+                </div>
+                <div class="stat-card" style="border-right:4px solid #f59e0b;">
+                    <span>⏳</span>
+                    <div>
+                        <strong id="counterLate" style="color:#d97706;">0</strong>
+                        <small>متأخر</small>
+                    </div>
+                </div>
+                <div class="stat-card absent-stat">
+                    <span>🔴</span>
+                    <div>
+                        <strong id="counterAbsent">0</strong>
+                        <small>غائب</small>
+                    </div>
+                </div>
+                <div class="stat-card pending-stat">
+                    <span>⏳</span>
+                    <div>
+                        <strong id="counterPending">0</strong>
+                        <small>بانتظار المسح</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fast Keyboard / Barcode Scanner Input -->
+            <div class="scan-input-box">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <label for="barcodeInput" style="font-weight:700; color:#312e81; font-size:16px;">
+                        🏷️ جاهز لمسح قارئ الباركود (USB / Bluetooth):
+                    </label>
+                    <button type="button" id="toggleCamBtn" class="barcode-btn" onclick="toggleCamera()" style="font-size:13px; padding:6px 14px;">
+                        📷 تشغيل كاميرا الهاتف
+                    </button>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="barcodeInput" placeholder="وجّه الماسح نحو بطاقة الطالب أو أدخل الكود..." autofocus
+                        style="flex:1; padding:14px; font-size:18px; font-family:monospace; font-weight:bold; text-align:center; border:2px solid #cbd5e1; border-radius:8px;"
+                        onkeydown="handleKeyScan(event)">
+                    <button class="save-btn" onclick="manualScanSubmit()" style="font-size:16px; padding:0 24px;">تسجيل</button>
+                </div>
+            </div>
+
+            <!-- Camera Video Container (Hidden by default) -->
+            <div id="cameraContainer" style="display:none; max-width:340px; margin:15px auto; border-radius:12px; overflow:hidden; border:2px solid #6366f1;">
+                <div id="cameraReader"></div>
+            </div>
+
+            <!-- Live Last Scan Hero Banner -->
+            <div id="lastScanBanner" class="scan-hero">
+                <h3 id="heroStatusText" style="font-size:22px; margin-bottom:6px;">جاهز للمسح</h3>
+                <p id="heroSubText" style="font-size:15px; opacity:0.9;">وجّه قارئ الباركود لبطاقة الطالب لرصد الحضور فورياً</p>
+                <div id="heroDetails" style="margin-top:10px; font-family:monospace; font-size:14px; color:#c7d2fe;"></div>
+            </div>
+
+            <!-- Recent Scans Stream -->
+            <h3 style="margin:20px 0 10px; color:#1e293b; font-size:17px;">📋 السجلات التي تم مسحها في هذه الجلسة:</h3>
+            <div class="scan-feed" id="scansFeed">
+                <div style="text-align:center; padding:25px; color:#888;">لم يتم مسح أي طالب في هذه الجلسة بعد</div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; flex-wrap:wrap; gap:10px;">
+                <button class="print-btn" onclick="window.location.href='attendance.html'">📋 فتح جدول الحضور الكامل</button>
+                <button class="export-btn" onclick="finalizeScannerSession()" style="background:#4338ca;">🔒 إنهاء واعتماد جلسة اليوم</button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="app-footer" style="text-align:center; padding:18px 12px; margin-top:35px; background:#f8fafc; border-top:1px solid #e2e8f0; color:#64748b; font-size:13px; line-height:1.6;">
+        <div style="max-width:900px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div>
+                🏫 <strong>مدرسة السادات الابتدائية بميت غمر</strong> - نظام الإدارة المدرسية والرصد الذكي
+            </div>
+            <div style="font-size:12px; color:#475569;">
+                تم التصميم والبرمجة والتطوير وحقوق الملكية الكاملة بواسطة: <strong style="color:#4f46e5; font-size:13px;">أماني محمد السيد</strong> (Amany Mohamed El-Sayed) © 2025 - 2026
+            </div>
+        </div>
+    </footer>
+
+    <!-- Core Scripts -->
+    <script src="core/security.js"></script>
+    <script src="core/audit.js"></script>
+    <script src="core/barcode.js"></script>
+    <script src="core/attendance.js"></script>
+    <script src="database.js"></script>
+    <script src="utils.js"></script>
+
+    <script>
+        let db;
+        let selectedClassId = null;
+        let currentClassStudents = [];
+        let sessionAttendance = [];
+        let html5Camera = null;
+        let isCamOpen = false;
+
+        function initScannerPage() {
+            db = initDatabase();
+            populateGrades();
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("scanDate").value = today;
+
+            // Keep barcode input constantly focused for USB scanner
+            const input = document.getElementById("barcodeInput");
+            setInterval(() => {
+                if (document.activeElement !== input &&
+                    document.activeElement.tagName !== "SELECT" &&
+                    document.activeElement.tagName !== "INPUT") {
+                    input.focus();
+                }
+            }, 1500);
+
+            // Initialize Hardware Barcode Scanner Listener
+            if (window.BarcodeSystem && BarcodeSystem.HardwareScannerListener) {
+                const listener = new BarcodeSystem.HardwareScannerListener((code) => {
+                    handleScannedCode(code, "hardware");
+                }, { targetInputId: "barcodeInput" });
+                listener.start();
+            }
+        }
+
+        function populateGrades() {
+            const sel = document.getElementById("gradeSelect");
+            sel.innerHTML = '<option value="">اختر الصف</option>';
+            db.grades.forEach(g => {
+                const o = document.createElement("option");
+                o.value = g.id;
+                o.textContent = g.name;
+                sel.appendChild(o);
+            });
+        }
+
+        function handleGradeChange() {
+            const gid = parseInt(document.getElementById("gradeSelect").value);
+            const csel = document.getElementById("classSelect");
+            csel.innerHTML = '<option value="">اختر الفصل</option>';
+            selectedClassId = null;
+
+            if (!gid) {
+                updateCounters();
+                return;
+            }
+
+            getClassesByGrade(gid).forEach(c => {
+                const o = document.createElement("option");
+                o.value = c.id;
+                o.textContent = `فصل ${c.name}`;
+                csel.appendChild(o);
+            });
+
+            handleClassChange();
+        }
+
+        function handleClassChange() {
+            const cid = parseInt(document.getElementById("classSelect").value);
+            selectedClassId = cid || null;
+            const date = document.getElementById("scanDate").value;
+
+            if (!selectedClassId) {
+                currentClassStudents = [];
+                sessionAttendance = [];
+                updateCounters();
+                return;
+            }
+
+            currentClassStudents = getStudentsByClass(selectedClassId);
+            const key = `attendance_${date}_class_${selectedClassId}`;
+            const raw = localStorage.getItem(key);
+
+            if (raw) {
+                try {
+                    sessionAttendance = JSON.parse(raw);
+                } catch(e) {
+                    sessionAttendance = [];
+                }
+            } else {
+                sessionAttendance = currentClassStudents.map(s => ({
+                    studentId: s.id,
+                    nationalId: s.nationalId,
+                    name: s.name,
+                    status: "لم يتم التسجيل",
+                    classId: selectedClassId
+                }));
+            }
+
+            updateCounters();
+            renderScansFeed();
+        }
+
+        function updateCounters() {
+            const total = currentClassStudents.length;
+            let present = 0, late = 0, absent = 0, pending = 0;
+
+            sessionAttendance.forEach(r => {
+                if (r.status === "حاضر") present++;
+                else if (r.status === "متأخر") late++;
+                else if (r.status === "غائب") absent++;
+                else pending++;
+            });
+
+            document.getElementById("counterTotal").textContent = total;
+            document.getElementById("counterPresent").textContent = present;
+            document.getElementById("counterLate").textContent = late;
+            document.getElementById("counterAbsent").textContent = absent;
+            document.getElementById("counterPending").textContent = pending;
+        }
+
+        function handleKeyScan(e) {
+            if (e.key === "Enter" || e.keyCode === 13) {
+                e.preventDefault();
+                manualScanSubmit();
+            }
+        }
+
+        function manualScanSubmit() {
+            const input = document.getElementById("barcodeInput");
+            const val = input.value.trim();
+            if (!val) return;
+            handleScannedCode(val, "input");
+            input.value = "";
+            input.focus();
+        }
+
+        function handleScannedCode(code, method) {
+            code = String(code).trim();
+            const heroStatus = document.getElementById("heroStatusText");
+            const heroSub = document.getElementById("heroSubText");
+            const heroDetails = document.getElementById("heroDetails");
+            const banner = document.getElementById("lastScanBanner");
+
+            const student = findStudentByNationalId(code) || findStudentByName(code);
+
+            if (!student) {
+                if (window.BarcodeSystem) BarcodeSystem.playSoundError();
+                heroStatus.textContent = `❌ كود غير مسجل بالمدرسة`;
+                heroSub.textContent = `لم يتم العثور على طالب يطابق هذا الكود (${code})`;
+                heroDetails.textContent = `الوقت: ${new Date().toLocaleTimeString('ar-EG')}`;
+                banner.style.background = "linear-gradient(135deg, #dc2626, #991b1b)";
+                return;
+            }
+
+            const date = document.getElementById("scanDate").value;
+
+            // ── AUTO-DETECT & SWITCH CLASS SEAMLESSLY ──
+            if (!selectedClassId || selectedClassId !== student.classId) {
+                selectedClassId = student.classId;
+                const gid = getGradeIdByClass(selectedClassId);
+
+                // Update UI dropdowns
+                try {
+                    const gsel = document.getElementById("gradeSelect");
+                    const csel = document.getElementById("classSelect");
+                    if (gsel && gid) gsel.value = gid;
+                    if (csel && gid) {
+                        csel.innerHTML = '<option value="">اختر الفصل</option>';
+                        getClassesByGrade(gid).forEach(c => {
+                            const o = document.createElement("option");
+                            o.value = c.id;
+                            o.textContent = `فصل ${c.name}`;
+                            csel.appendChild(o);
+                        });
+                        csel.value = selectedClassId;
+                    }
+                } catch(e) {}
+
+                // Load class students and attendance
+                currentClassStudents = getStudentsByClass(selectedClassId);
+                const classKey = `attendance_${date}_class_${selectedClassId}`;
+                const raw = localStorage.getItem(classKey);
+                if (raw) {
+                    try { sessionAttendance = JSON.parse(raw); } catch(e) { sessionAttendance = []; }
+                } else {
+                    sessionAttendance = currentClassStudents.map(s => ({
+                        studentId: s.id,
+                        nationalId: s.nationalId,
+                        name: s.name,
+                        status: "لم يتم التسجيل",
+                        classId: selectedClassId
+                    }));
+                }
+            }
+
+            // Check session lock
+            if (localStorage.getItem(`attendance_session_locked_${date}_class_${selectedClassId}`) === "true") {
+                if (window.BarcodeSystem) BarcodeSystem.playSoundError();
+                heroStatus.textContent = `🔒 الجلسة مقفلة ومعتمدة`;
+                heroSub.textContent = `جلسة فصل ${getClassName(student.classId)} مقفلة ومعتمدة رسمياً`;
+                heroDetails.textContent = `الكود: ${student.nationalId} | يرجى فك القفل للرصد`;
+                banner.style.background = "linear-gradient(135deg, #dc2626, #991b1b)";
+                return;
+            }
+
+            // Check if already registered
+            const record = sessionAttendance.find(r => r.nationalId === student.nationalId);
+            const markStatus = document.getElementById("scanMode").value || "حاضر";
+
+            if (record && record.status === markStatus) {
+                if (window.BarcodeSystem) BarcodeSystem.playSoundWarning();
+                heroStatus.textContent = `⚠️ تم رصد ${markStatus} الطالب مسبقاً!`;
+                heroSub.textContent = `${student.name} - مسجل ${markStatus} في هذه الجلسة`;
+                heroDetails.textContent = `الكود: ${student.nationalId} | الفصل: ${getClassName(student.classId)}`;
+                banner.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
+                return;
+            }
+
+            // Valid scan
+            if (record) {
+                record.status = markStatus;
+                record.scannedAt = new Date().toISOString();
+            } else {
+                sessionAttendance.push({
+                    studentId: student.id,
+                    nationalId: student.nationalId,
+                    name: student.name,
+                    status: markStatus,
+                    classId: selectedClassId,
+                    scannedAt: new Date().toISOString()
+                });
+            }
+
+            // Save to class attendance key
+            const key = `attendance_${date}_class_${selectedClassId}`;
+            localStorage.setItem(key, JSON.stringify(sessionAttendance));
+
+            // Also sync to global date key attendance_YYYY-MM-DD for instant real-time sync
+            try {
+                let globalData = [];
+                const rawGlobal = localStorage.getItem("attendance_" + date);
+                if (rawGlobal) {
+                    try { globalData = JSON.parse(rawGlobal) || []; } catch(e) {}
+                }
+                globalData = globalData.filter(r => r.nationalId !== student.nationalId);
+                globalData.push({
+                    studentId: student.id,
+                    nationalId: student.nationalId,
+                    name: student.name,
+                    status: markStatus,
+                    classId: selectedClassId,
+                    scannedAt: new Date().toISOString()
+                });
+                localStorage.setItem("attendance_" + date, JSON.stringify(globalData));
+            } catch(e) {}
+
+            if (window.BarcodeSystem) BarcodeSystem.playSoundSuccess();
+
+            heroStatus.textContent = `✅ تم رصد الحضور: ${student.name}`;
+            heroSub.textContent = `الحالة: ${markStatus} | ${getClassName(student.classId)}`;
+            heroDetails.textContent = `الكود: ${student.nationalId} | الوقت: ${new Date().toLocaleTimeString('ar-EG')}`;
+            banner.style.background = "linear-gradient(135deg, #15803d, #166534)";
+
+            updateCounters();
+            renderScansFeed();
+        }
+
+        function renderScansFeed() {
+            const feed = document.getElementById("scansFeed");
+            const scannedItems = sessionAttendance.filter(r => r.status !== "لم يتم التسجيل");
+
+            if (scannedItems.length === 0) {
+                feed.innerHTML = '<div style="text-align:center; padding:25px; color:#888;">لم يتم مسح أي طالب في هذه الجلسة بعد</div>';
+                return;
+            }
+
+            feed.innerHTML = scannedItems.slice().reverse().map((r, i) => `
+                <div class="feed-item">
+                    <div>
+                        <strong style="color:#1e293b;">${r.name}</strong>
+                        <div style="font-family:monospace; color:#64748b; font-size:12px;">ID: ${r.nationalId}</div>
+                    </div>
+                    <div>
+                        <span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:bold; ${r.status === 'حاضر' ? 'background:#dcfce7; color:#166534;' : 'background:#fef3c7; color:#92400e;'}">
+                            ${r.status}
+                        </span>
+                        <span style="font-size:11px; color:#94a3b8; margin-right:8px;">
+                            ${r.scannedAt ? new Date(r.scannedAt).toLocaleTimeString('ar-EG') : 'تم المسح'}
+                        </span>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function toggleCamera() {
+            const container = document.getElementById("cameraContainer");
+            const btn = document.getElementById("toggleCamBtn");
+
+            if (!isCamOpen) {
+                container.style.display = "block";
+                btn.textContent = "⏹️ إيقاف الكاميرا";
+                startCam();
+                isCamOpen = true;
+            } else {
+                stopCam();
+                container.style.display = "none";
+                btn.textContent = "📷 تشغيل كاميرا الهاتف";
+                isCamOpen = false;
+            }
+        }
+
+        function startCam() {
+            if (!window.Html5Qrcode) return;
+            html5Camera = new Html5Qrcode("cameraReader");
+            html5Camera.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                (decoded) => handleScannedCode(decoded.trim(), "camera"),
+                () => {}
+            ).catch(err => {
+                showToast("تعذر تشغيل الكاميرا: " + err, "error");
+                toggleCamera();
+            });
+        }
+
+        function stopCam() {
+            if (html5Camera) {
+                html5Camera.stop().then(() => {
+                    html5Camera.clear();
+                    html5Camera = null;
+                }).catch(() => {});
+            }
+        }
+
+        function finalizeScannerSession() {
+            if (!selectedClassId) {
+                showToast("اختر الفصل أولاً", "warning");
+                return;
+            }
+            const date = document.getElementById("scanDate").value;
+            if (confirm("هل تريد اعتماد وقفل جلسة الحضور وتسجيل جميع الطلاب المتبقين كغياب؟")) {
+                let absents = 0;
+                sessionAttendance.forEach(r => {
+                    if (r.status === "لم يتم التسجيل") {
+                        r.status = "غائب";
+                        absents++;
+                    }
+                });
+                const key = `attendance_${date}_class_${selectedClassId}`;
+                localStorage.setItem(key, JSON.stringify(sessionAttendance));
+                localStorage.setItem(`attendance_session_locked_${date}_class_${selectedClassId}`, "true");
+                updateCounters();
+                renderScansFeed();
+                showToast(`✅ تم اعتماد الجلسة وتسجيل ${absents} غياب للطلاب غير المسجلين`, "success");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", initScannerPage);
+    </script>
+</body>
+</html>

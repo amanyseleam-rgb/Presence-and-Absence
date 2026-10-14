@@ -1,0 +1,255 @@
+/**
+ * Mobile Responsiveness Stylesheet
+ * مدرسة السادات الابتدائية - تحسينات الهاتف المحمول
+ * تصميم وتطوير: أماني محمد السيد
+ * 
+ * IMPORTANT: This file supplements style.css - it does NOT override any desktop styles.
+ * All rules here are scoped to max-width media queries only.
+ */
+
+/* ======================================================
+   BASE MOBILE RESETS (max-width: 768px)
+   ====================================================== */
+@media (max-width: 768px) {
+
+    /* Header */
+    .attendance-header {
+        padding: 14px 12px !important;
+    }
+    .attendance-header h1 {
+        font-size: 18px !important;
+    }
+    .attendance-header p {
+        font-size: 12px !important;
+    }
+    .back-home {
+        margin-bottom: 8px;
+    }
+    .back-home button {
+        font-size: 13px !important;
+        padding: 6px 12px !important;
+    }
+
+    /* Main containers */
+    .attendance-container,
+    .student-dashboard,
+    main {
+        padding: 10px !important;
+    }
+
+    /* Top bar (filters row) */
+    .top-bar {
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding: 12px !important;
+    }
+    .top-bar > div,
+    .top-bar label,
+    .top-bar select,
+    .top-bar input {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* Stats grid */
+    .stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+    .stat-card {
+        padding: 10px 8px !important;
+        font-size: 13px !important;
+    }
+    .stat-card strong {
+        font-size: 20px !important;
+    }
+
+    /* Nav menu (tab buttons) */
+    .nav-menu {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        padding: 8px !important;
+    }
+    .nav-menu button {
+        flex: 1 1 calc(50% - 6px) !important;
+        min-width: 120px !important;
+        font-size: 12px !important;
+        padding: 8px 6px !important;
+        white-space: normal !important;
+        text-align: center !important;
+    }
+
+    /* Dashboard grid cards */
+    .dashboard {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+    }
+    .dashboard-card {
+        padding: 14px !important;
+    }
+
+    /* Tables — horizontal scroll */
+    table,
+    .results-table,
+    #studentsTable,
+    #myResultsTable,
+    #myMonthlyTable,
+    #myAttendanceTable,
+    #parentResultsTable,
+    #parentMonthlyTable,
+    #parentAttendanceTable {
+        display: block !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        white-space: nowrap !important;
+        font-size: 12px !important;
+    }
+    table thead th,
+    table tbody td {
+        padding: 6px 8px !important;
+        font-size: 12px !important;
+    }
+
+    /* Buttons — full width on mobile for action buttons */
+    .save-btn,
+    .export-btn,
+    .print-btn,
+    .present-btn,
+    .absent-btn,
+    .barcode-btn,
+    .edit-btn {
+        font-size: 12px !important;
+        padding: 6px 10px !important;
+    }
+
+    /* Student info card */
+    .student-info-card {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 12px !important;
+        padding: 14px !important;
+    }
+    .student-details {
+        width: 100%;
+    }
+    .student-avatar {
+        font-size: 48px !important;
+        width: 70px !important;
+        height: 70px !important;
+    }
+
+    /* Scanner box */
+    .scanner-box {
+        padding: 12px !important;
+    }
+    #hwBarcodeInput {
+        font-size: 14px !important;
+        padding: 10px !important;
+    }
+
+    /* Result summary */
+    .results-summary {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    /* Modal */
+    .modal {
+        padding: 10px !important;
+    }
+    .modal-content {
+        max-width: 96vw !important;
+        padding: 16px !important;
+    }
+
+    /* Form groups */
+    .form-group {
+        margin-bottom: 12px !important;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 14px !important;
+        padding: 10px !important;
+    }
+
+    /* Login page */
+    .login-box {
+        padding: 20px 14px !important;
+        max-width: 95vw !important;
+    }
+    .login-tabs button {
+        font-size: 12px !important;
+        padding: 8px 10px !important;
+    }
+
+    /* Reports / Statistics page */
+    .chart-container {
+        overflow-x: auto !important;
+    }
+
+    /* Footer branding */
+    .app-footer {
+        font-size: 11px !important;
+        padding: 12px 8px !important;
+    }
+}
+
+/* ======================================================
+   SMALL PHONE (max-width: 480px)
+   ====================================================== */
+@media (max-width: 480px) {
+
+    .attendance-header h1 {
+        font-size: 16px !important;
+    }
+
+    .stats {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    .nav-menu button {
+        flex: 1 1 100% !important;
+        font-size: 13px !important;
+    }
+
+    /* Barcode canvas — scale down */
+    #studentDirectBarcode,
+    #parentDirectBarcode {
+        width: 180px !important;
+        height: 60px !important;
+    }
+
+    /* Action button row in attendance table */
+    #studentsTable td:last-child {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }
+    #studentsTable td:last-child button {
+        font-size: 11px !important;
+        padding: 4px 6px !important;
+    }
+
+    .results-summary {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    .summary-item .value {
+        font-size: 22px !important;
+    }
+}
+
+/* ======================================================
+   PRINT OVERRIDES (keep print unaffected)
+   ====================================================== */
+@media print {
+    .app-footer {
+        display: block !important;
+    }
+    .nav-menu,
+    .back-home,
+    .logout-btn {
+        display: none !important;
+    }
+}

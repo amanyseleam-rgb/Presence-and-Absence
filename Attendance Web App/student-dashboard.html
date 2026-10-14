@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الطالب</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+</head>
+
+<body>
+
+    <header class="attendance-header">
+        <h1>👨‍🎓 لوحة تحكم الطالب</h1>
+        <p>متابعة الدرجات والحضور والانصراف</p>
+    </header>
+
+    <main class="student-dashboard">
+
+        <div id="studentInfo" class="student-info-card">
+            <div class="student-avatar" id="avatar">👤</div>
+            <div class="student-details">
+                <h2 id="studentName">-</h2>
+                <p>🆔 <strong>كود الطالب / id:</strong> <span id="studentNid" style="font-family:monospace; font-weight:bold; color:#4338ca;">-</span></p>
+                <p>🏫 <strong>الفصل الدراسي المسند:</strong> <span id="studentClass" style="color:#2563eb; font-weight:bold;">-</span> <span id="studentGradeBadge" style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:bold; margin-right:6px;">-</span></p>
+                <p>🚻 <strong>النوع:</strong> <span id="studentGender">-</span></p>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button class="barcode-btn" onclick="showMyBarcode()" style="width:100%;">🏷️ تكبير وطباعة الباركود</button>
+                <button class="logout-btn" onclick="logout()">🚪 تسجيل الخروج</button>
+            </div>
+        </div>
+
+        <!-- Inline Student Barcode Section -->
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px; margin-bottom: 22px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div>
+                <h3 style="margin:0 0 4px; color:#1e293b; font-size:16px;">🏷️ باركود الطالب للحضور اليومي (Student Barcode)</h3>
+                <p style="margin:0; color:#64748b; font-size:13px;">اعرض هذا الرمز لمسؤول رصد الحضور والغياب أو احفظه على هاتفك لتسجيل الحضور اليومي</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <canvas id="studentDirectBarcode" width="220" height="75" style="border:1px dashed #cbd5e1; border-radius:8px; padding:4px; background:#fff;"></canvas>
+                <button class="print-btn" onclick="printCurrentBarcode()" style="font-size:13px; padding:8px 14px;">🖨️ طباعة بطاقة الباركود</button>
+            </div>
+        </div>
+
+        <div class="nav-menu">
+            <button id="tabResults" class="active" onclick="switchStudentTab('results')">🎓 درجاتي النهائية</button>
+            <button id="tabMonthly" onclick="switchStudentTab('monthly')">📅 التقييمات الشهرية (6 عناصر)</button>
+            <button id="tabAttendance" onclick="switchStudentTab('attendance')">📅 سجل الحضور والغياب</button>
+            <button id="tabSubjects" onclick="switchStudentTab('subjects')">📖 المواد الدراسية</button>
+        </div>
+
+        <div id="studentResultsSection">
+            <div class="top-bar">
+                <div>
+                    <label for="sTerm">📝 الفصل الدراسي</label>
+                    <select id="sTerm" class="term-select" onchange="loadMyResults()">
+                        <option value="الفصل الأول">الفصل الأول</option>
+                        <option value="الفصل الثاني">الفصل الثاني</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="results-summary">
+                <div class="summary-item">
+                    <label>المجموع</label>
+                    <div class="value" id="myTotal">0</div>
+                </div>
+                <div class="summary-item">
+                    <label>النسبة</label>
+                    <div class="value" id="myPct">0%</div>
+                </div>
+                <div class="summary-item">
+                    <label>التقدير</label>
+                    <div class="value" id="myGrade" style="color:#4f46e5;">-</div>
+                </div>
+                <div class="summary-item">
+                    <label>الرتبة</label>
+                    <div class="value" id="myRank" style="color:#f59e0b;">-</div>
+                </div>
+            </div>
+
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="print-btn" onclick="printMyReport()">🖨️ طباعة كشف الدرجات</button>
+            </div>
+
+            <div id="myResultsSection" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>📖 المادة</th>
+                            <th>🏆 الدرجة</th>
+                            <th>📊 المجموع الكلي</th>
+                            <th>📈 النسبة</th>
+                            <th>🏅 التقدير</th>
+                        </tr>
+                    </thead>
+                    <tbody id="myResultsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="studentMonthlySection" class="hidden">
+            <div class="top-bar">
+                <div>
+                    <label for="sMonth">📅 الشهر الدراسي</label>
+                    <select id="sMonth" onchange="loadMyMonthlyEvals()">
+                    </select>
+                </div>
+                <div class="action-buttons">
+                    <button class="print-btn" onclick="printSection('myMonthlyTableContainer', 'كشف التقييمات الشهرية للطالب')">
+                        🖨️ طباعة كشف التقييمات الشهرية
+                    </button>
+                </div>
+            </div>
+
+            <div class="input-hint" style="margin-bottom:12px;">
+                💡 نظام التقييم الابتدائي المصري: امتحان الشهر (50) + واجب (5) + مشاركة (5) + سلوك (10) + عملي (15) + شفوي (15) = 100 درجة.
+            </div>
+
+            <div id="myMonthlyTableContainer" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>📖 اسم المادة</th>
+                            <th title="امتحان الشهر (50)">امتحان (50)</th>
+                            <th title="كشكول الواجب (5)">واجب (5)</th>
+                            <th title="المشاركة والتفاعل (5)">مشاركة (5)</th>
+                            <th title="السلوك والمواظبة (10)">سلوك (10)</th>
+                            <th title="التقييم العملي (15)">عملي (15)</th>
+                            <th title="التقييم الشفوي (15)">شفوي (15)</th>
+                            <th>المجموع (100)</th>
+                            <th>التقدير اللوني</th>
+                            <th>ملاحظات المعلم</th>
+                        </tr>
+                    </thead>
+                    <tbody id="myMonthlyTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="studentAttendanceSection" class="hidden">
+            <div class="results-summary">
+                <div class="summary-item">
+                    <label>أيام الحضور</label>
+                    <div class="value" style="color:#16a34a;" id="myPresent">0</div>
+                </div>
+                <div class="summary-item">
+                    <label>أيام الغياب</label>
+                    <div class="value" style="color:#dc2626;" id="myAbsent">0</div>
+                </div>
+                <div class="summary-item">
+                    <label>نسبة الحضور</label>
+                    <div class="value" id="myAttPct">0%</div>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>📅 التاريخ</th>
+                            <th>🏫 الفصل</th>
+                            <th>✅ الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="myAttendanceTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="studentSubjectsSection" class="hidden">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>📖 اسم المادة</th>
+                            <th>📊 الدرجة العظمى</th>
+                            <th>💡 ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mySubjectsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="app-footer" style="text-align:center; padding:18px 12px; margin-top:35px; background:#f8fafc; border-top:1px solid #e2e8f0; color:#64748b; font-size:13px; line-height:1.6;">
+        <div style="max-width:900px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div>
+                🏫 <strong>مدرسة السادات الابتدائية بميت غمر</strong> - نظام الإدارة المدرسية والرصد الذكي
+            </div>
+            <div style="font-size:12px; color:#475569;">
+                تم التصميم والبرمجة والتطوير وحقوق الملكية الكاملة بواسطة: <strong style="color:#4f46e5; font-size:13px;">أماني محمد السيد</strong> (Amany Mohamed El-Sayed) © 2025 - 2026
+            </div>
+        </div>
+    </footer>
+
+    <script src="core/security.js"></script>
+    <script src="core/egyptian-grading.js"></script>
+    <script src="database.js"></script>
+    <script src="utils.js"></script>
+    <script>
+        let currentStudent = null;
+
+        function initStudentDashboard() {
+            const session = getCurrentSession();
+            if (!session || session.role !== "student") {
+                window.location.href = "login.html";
+                return;
+            }
+
+            const db = initDatabase();
+            currentStudent = db.students.find(s => s.id === session.studentId || s.nationalId === session.nationalId);
+            if (!currentStudent) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            document.getElementById("studentName").textContent = currentStudent.name;
+            document.getElementById("studentNid").textContent = currentStudent.nationalId;
+            document.getElementById("studentGender").textContent = currentStudent.gender || "-";
+            document.getElementById("studentClass").textContent = getClassName(currentStudent.classId);
+            const studentGradeId = getGradeIdByClass(currentStudent.classId);
+            const gradeBadge = document.getElementById("studentGradeBadge");
+            if (gradeBadge) gradeBadge.textContent = studentGradeId ? `الصف ${studentGradeId} الابتدائي` : "";
+            document.getElementById("avatar").textContent = currentStudent.name.charAt(0);
+
+            // Generate direct inline barcode for scanning
+            setTimeout(() => {
+                generateBarcode(currentStudent.nationalId, currentStudent.name, "studentDirectBarcode");
+            }, 80);
+
+            const monthSel = document.getElementById("sMonth");
+            getMonthsList().forEach(m => {
+                const o = document.createElement("option");
+                o.value = m.id;
+                o.textContent = m.name;
+                monthSel.appendChild(o);
+            });
+
+            loadSubjects(studentGradeId);
+            loadMyResults(studentGradeId);
+            loadMyMonthlyEvals(studentGradeId, true);
+            loadMyAttendance();
+        }
+
+        function loadSubjects(gradeId) {
+            const table = document.getElementById("mySubjectsTable");
+            const subs = getSubjects(gradeId);
+            table.innerHTML = subs.map((s, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${s.name}</strong></td>
+                    <td>${s.maxScore}</td>
+                    <td style="color:#64748b;">مادة دراسية أساسية - نظام التقييم الابتدائي</td>
+                </tr>
+            `).join("");
+        }
+
+        function loadMyResults(gradeId) {
+            const table = document.getElementById("myResultsTable");
+            table.innerHTML = "";
+            const term = document.getElementById("sTerm").value;
+            const subs = getSubjects(gradeId || getGradeIdByClass(currentStudent.classId));
+            const myResults = getResultsByStudent(currentStudent.id).filter(r => r.term === term);
+            const maxTotal = subs.reduce((s, sub) => s + sub.maxScore, 0);
+
+            let total = 0, hasAny = false;
+            subs.forEach((s, i) => {
+                const res = myResults.find(r => r.subjectId === s.id);
+                const score = res?.score ?? 0;
+                const hasScore = res?.score !== undefined;
+                if (hasScore) { total += score; hasAny = true; }
+
+                const calc = window.EgyptianGrading
+                    ? EgyptianGrading.calculateSubjectResult(s.maxScore, hasScore ? score : 0)
+                    : { percentage: (score/s.maxScore)*100, colorBand: { label: "-", colorHex: "#64748b", bgHex: "#f8fafc" } };
+
+                const band = calc.colorBand;
+                const pct = s.maxScore > 0 ? ((hasScore ? score : 0) / s.maxScore) * 100 : 0;
+
+                table.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${s.name}</strong></td>
+                        <td><strong>${hasScore ? score : '-'}</strong></td>
+                        <td>${s.maxScore}</td>
+                        <td>${hasScore ? pct.toFixed(1) + '%' : '-'}</td>
+                        <td>
+                            <span style="display:inline-block; padding:4px 10px; border-radius:8px; font-weight:700; font-size:13px; color:${band.colorHex}; background:${band.bgHex}; border:1px solid ${band.colorHex}40;">
+                                ${hasScore ? band.label : '-'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            const pctTotal = maxTotal > 0 ? ((hasAny ? total : 0) / maxTotal) * 100 : 0;
+            const overallBand = window.EgyptianGrading ? EgyptianGrading.getColorBand(pctTotal) : { label: "-", colorHex: "#4338ca" };
+
+            document.getElementById("myTotal").textContent = hasAny ? total.toFixed(1) + " / " + maxTotal : "0 / " + maxTotal;
+            document.getElementById("myPct").textContent = (hasAny ? pctTotal.toFixed(1) : "0") + "%";
+            document.getElementById("myGrade").textContent = hasAny ? overallBand.label : "-";
+            document.getElementById("myGrade").style.color = overallBand.colorHex;
+
+            const classmates = getStudentsByClass(currentStudent.classId);
+            const classScores = classmates.map(st => {
+                const res = getResultsByStudent(st.id).filter(r => r.term === term);
+                let t = 0, any = false;
+                subs.forEach(s => {
+                    const r = res.find(x => x.subjectId === s.id);
+                    if (r?.score !== undefined && !isNaN(r.score)) { t += r.score; any = true; }
+                });
+                return { id: st.id, total: any ? t : -1 };
+            }).filter(x => x.total >= 0).sort((a, b) => b.total - a.total);
+            const myIdx = classScores.findIndex(x => x.id === currentStudent.id);
+            document.getElementById("myRank").textContent = myIdx >= 0 ? `#${myIdx + 1} من ${classScores.length}` : "-";
+        }
+
+        function loadMyMonthlyEvals(gradeId, autoSelectLatest = false) {
+            const table = document.getElementById("myMonthlyTable");
+            if (!table) return;
+            table.innerHTML = "";
+            const monthSel = document.getElementById("sMonth");
+            const gid = gradeId || getGradeIdByClass(currentStudent.classId);
+            const subs = getSubjects(gid);
+            const allStudentEvals = getMonthlyEvalsByStudent(currentStudent.id);
+
+            let monthId = monthSel ? parseInt(monthSel.value) : 9;
+            if (allStudentEvals.length > 0) {
+                const hasInCurrent = allStudentEvals.some(r => r.monthId === monthId);
+                if (!hasInCurrent && autoSelectLatest) {
+                    const latestMonthId = allStudentEvals[allStudentEvals.length - 1].monthId;
+                    if (latestMonthId && monthSel) {
+                        monthSel.value = latestMonthId;
+                        monthId = latestMonthId;
+                    }
+                }
+            }
+
+            const myEvals = allStudentEvals.filter(r => r.monthId === monthId);
+
+            let any = false;
+            subs.forEach((s, i) => {
+                const res = myEvals.find(r => r.subjectId === s.id);
+                const comp = res?.components || null;
+                const score = res?.score;
+                const hasScore = score !== undefined && !isNaN(score);
+                if (hasScore) any = true;
+
+                const band = hasScore && window.EgyptianGrading
+                    ? EgyptianGrading.getColorBand(score)
+                    : { label: "-", colorHex: "#64748b", bgHex: "#f8fafc" };
+
+                table.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${s.name}</strong></td>
+                        <td>${comp ? comp.exam : (hasScore ? score : '-')}</td>
+                        <td>${comp ? comp.homework : '-'}</td>
+                        <td>${comp ? comp.participation : '-'}</td>
+                        <td>${comp ? comp.behavior : '-'}</td>
+                        <td>${comp ? comp.practical : '-'}</td>
+                        <td>${comp ? comp.oral : '-'}</td>
+                        <td><strong style="font-size:15px; color:#1e293b;">${hasScore ? score : '-'} / 100</strong></td>
+                        <td>
+                            <span style="display:inline-block; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:700; color:${band.colorHex}; background:${band.bgHex}; border:1px solid ${band.colorHex}30;">
+                                ${hasScore ? band.label : '-'}
+                            </span>
+                        </td>
+                        <td style="color:#64748b; font-size:12px;">${res?.comments || 'لا توجد ملاحظات'}</td>
+                    </tr>
+                `;
+            });
+            if (!any) {
+                table.innerHTML += `<tr><td colspan="11" style="text-align:center;padding:25px;color:#888;">لا توجد تقييمات شهرية مسجلة لهذا الشهر</td></tr>`;
+            }
+        }
+
+        function loadMyAttendance() {
+            const table = document.getElementById("myAttendanceTable");
+            table.innerHTML = "";
+            const records = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key.startsWith("attendance_")) continue;
+                const data = JSON.parse(localStorage.getItem(key));
+                const match = data.find(r => r.nationalId === currentStudent.nationalId);
+                if (match) {
+                    const datePart = key.split("_")[1];
+                    records.push({
+                        date: datePart,
+                        status: match.status,
+                        className: getClassName(match.classId || currentStudent.classId)
+                    });
+                }
+            }
+            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            let present = 0, absent = 0;
+            records.forEach(r => {
+                if (r.status === "حاضر") present++;
+                if (r.status === "غائب") absent++;
+            });
+            const total = present + absent;
+            document.getElementById("myPresent").textContent = present;
+            document.getElementById("myAbsent").textContent = absent;
+            document.getElementById("myAttPct").textContent = total > 0 ? ((present / total) * 100).toFixed(1) + "%" : "0%";
+
+            if (records.length === 0) {
+                table.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:#888;">لا توجد سجلات حضور</td></tr>`;
+                return;
+            }
+
+            records.forEach((r, i) => {
+                const cls = r.status === "حاضر" ? "report-present" : r.status === "غائب" ? "report-absent" : "";
+                table.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${r.date}</td>
+                        <td>${r.className}</td>
+                        <td class="${cls}"><strong>${r.status}</strong></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function switchStudentTab(tab) {
+            ["studentResultsSection", "studentMonthlySection", "studentAttendanceSection", "studentSubjectsSection"].forEach(s =>
+                document.getElementById(s).classList.toggle("hidden", !s.includes(tab))
+            );
+            ["tabResults", "tabMonthly", "tabAttendance", "tabSubjects"].forEach((t, i) => {
+                const tabs = ["results", "monthly", "attendance", "subjects"];
+                document.getElementById(t).classList.toggle("active", tabs[i] === tab);
+            });
+        }
+
+        function showMyBarcode() {
+            openBarcodeModal(currentStudent);
+        }
+
+        function printMyReport() {
+            printSection("myResultsSection", `كشف درجات - ${currentStudent.name}`);
+        }
+
+        function logout() {
+            logoutUser();
+            window.location.href = "login.html";
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") closeBarcodeModal();
+        });
+
+        function syncStudentData() {
+            if (!currentStudent) return;
+            const gid = getGradeIdByClass(currentStudent.classId);
+            loadMyResults(gid);
+            loadMyMonthlyEvals(gid);
+            loadMyAttendance();
+        }
+
+        // Real-time synchronization when teacher records grades or attendance in another window/tab
+        window.addEventListener("storage", syncStudentData);
+        window.addEventListener("focus", syncStudentData);
+
+        document.addEventListener("DOMContentLoaded", initStudentDashboard);
+    </script>
+
+</body>
+
+</html>

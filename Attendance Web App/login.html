@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+</head>
+
+<body class="login-wrapper">
+
+    <div class="login-card">
+        <div class="icon">🔐</div>
+        <h2>تسجيل الدخول</h2>
+        <p class="subtitle">اختر نوع الحساب ثم أدخل بيانات الاعتماد</p>
+
+        <div class="role-tabs">
+            <button class="role-tab active" data-role="student" onclick="switchRole('student')">
+                👨‍🎓 طالب
+            </button>
+            <button class="role-tab" data-role="parent" onclick="switchRole('parent')">
+                👨‍👩‍👧 ولي أمر
+            </button>
+            <button class="role-tab" data-role="teacher" onclick="switchRole('teacher')">
+                👨‍🏫 مدرس
+            </button>
+            <button class="role-tab" data-role="admin" onclick="switchRole('admin')">
+                👑 مدير
+            </button>
+        </div>
+
+        <div id="loginError" class="login-error hidden"></div>
+
+        <form class="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label id="usernameLabel">👤 الاسم الكامل للطالب أو كود الطالب</label>
+                <input type="text" id="username" placeholder="أدخل اسم الطالب بالكامل أو كود الطالب (9 أرقام)" required autocomplete="username">
+            </div>
+
+            <div class="form-group" id="teacherSubjectGroup" style="display:none;">
+                <label>📚 المادة التي تدرسها</label>
+                <input type="text" id="teacherSubject" placeholder="مثال: لغة عربية / رياضيات / علوم (اختياري)">
+            </div>
+
+            <div class="form-group">
+                <label id="passwordLabel">🔒 كلمة المرور</label>
+                <input type="password" id="password" placeholder="أدخل كلمة المرور" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="login-btn">
+                ✅ تسجيل الدخول
+            </button>
+        </form>
+
+        <div class="login-hint" id="loginHint">
+            <strong>💡 للطلاب:</strong> أدخل اسم الطالب بالكامل أو كود الطالب (9 أرقام).<br>
+            <strong>💡 لأولياء الأمور:</strong> أدخل اسم ابنك/ابنتك أو الرقم القومي، كلمة المرور: كود الطالب أو <code>123456</code><br>
+            <strong>💡 للمعلمين:</strong> أدخل الاسم الكامل للمعلم أو البريد: <code>teacher@school.com</code> ، كلمة المرور: <code>123456</code><br>
+            <strong>💡 للمدير:</strong> أدخل اسم المدير أو البريد: <code>admin@school.com</code> ، كلمة المرور: <code>123456</code>
+        </div>
+
+        <div style="text-align:center; margin-top: 14px; display:flex; flex-direction:column; gap:8px;">
+            <a href="register.html" style="color:#16a34a; font-weight:700; text-decoration:none; font-size:14px; padding:6px; background:#f0fdf4; border-radius:8px; border:1px solid #bbf7d0;">
+                📝 فتح صفحة تسجيل حساب معلم جديد (الاسم، القسم، المادة)
+            </a>
+            <button onclick="toggleRegister()" style="background:transparent; border:none; color:#2563eb; cursor:pointer; font-weight:600; text-decoration:underline; font-size:13px;">
+                ⚡ أو تسجيل سريع من هذه الصفحة
+            </button>
+        </div>
+
+        <div id="registerSection" class="hidden" style="margin-top:18px; padding:16px; background:#f0f9ff; border-radius:14px; border:1px solid #bae6fd;">
+            <h3 style="margin:0 0 12px; color:#0369a1; font-size:17px;">📝 إنشاء حساب جديد</h3>
+            <div class="form-group">
+                <label>👤 الاسم الكامل</label>
+                <input type="text" id="regName" placeholder="مثال: أحمد محمد علي">
+            </div>
+            <div class="form-group" id="regDeptGroup">
+                <label>🏢 القسم أو الوحدة المدرسية</label>
+                <input type="text" id="regDept" placeholder="مثال: قسم اللغة العربية / قسم الرياضيات">
+            </div>
+            <div class="form-group">
+                <label>📧 البريد الإلكتروني</label>
+                <input type="email" id="regEmail" placeholder="example@school.com">
+            </div>
+            <div class="form-group">
+                <label>🔒 كلمة المرور</label>
+                <input type="password" id="regPassword" placeholder="4 أحرف أو أكثر">
+            </div>
+            <div class="form-group" id="regSubjectGroup">
+                <label>📚 المادة التي تدرسها (اختياري)</label>
+                <input type="text" id="regSubject" placeholder="مثال: لغة عربية / رياضيات / علوم">
+            </div>
+            <div class="form-group">
+                <label>💼 نوع الحساب</label>
+                <select id="regRole" onchange="const isT = this.value === 'teacher'; document.getElementById('regSubjectGroup').style.display = isT ? 'block' : 'none'; document.getElementById('regDeptGroup').style.display = isT ? 'block' : 'none';">
+                    <option value="teacher">مدرس</option>
+                    <option value="admin">مدير</option>
+                </select>
+            </div>
+            <div id="registerError" class="login-error hidden" style="margin:8px 0;"></div>
+            <button type="button" class="login-btn" onclick="handleRegister()" style="background:linear-gradient(135deg,#0ea5e9,#2563eb);">
+                ✅ إنشاء الحساب ثم تسجيل الدخول
+            </button>
+        </div>
+
+        <div style="text-align:center; margin-top: 18px;">
+            <button onclick="window.location.href='index.html'"
+                style="background:transparent; border:none; color:#4f46e5; cursor:pointer; font-weight:600; box-shadow:none;">
+                ↩️ العودة للرئيسية
+            </button>
+        </div>
+    </div>
+
+    <footer class="app-footer" style="text-align:center; padding:16px 12px; margin-top:25px; color:#64748b; font-size:12px; line-height:1.6; max-width:500px; margin-left:auto; margin-right:auto;">
+        <div>🏫 <strong>مدرسة السادات الابتدائية بميت غمر</strong></div>
+        <div style="font-size:11px; color:#475569; margin-top:2px;">
+            تصميم وتطوير وبرمجة: <strong style="color:#4f46e5;">أماني محمد السيد</strong> (Amany Mohamed El-Sayed) © 2025 - 2026
+        </div>
+    </footer>
+
+    <script src="core/security.js"></script>
+    <script src="core/audit.js"></script>
+    <script src="database.js"></script>
+    <script>
+        let currentRole = "student";
+
+        function switchRole(role) {
+            currentRole = role;
+            document.querySelectorAll(".role-tab").forEach(t => t.classList.remove("active"));
+            document.querySelector(`[data-role="${role}"]`).classList.add("active");
+
+            const uLabel = document.getElementById("usernameLabel");
+            const pLabel = document.getElementById("passwordLabel");
+            const uInput = document.getElementById("username");
+            const pInput = document.getElementById("password");
+            const subjGroup = document.getElementById("teacherSubjectGroup");
+
+            if (role === "student") {
+                uLabel.textContent = "👤 الاسم الكامل للطالب أو كود الطالب";
+                pLabel.textContent = "🔒 كلمة المرور / كود الطالب";
+                uInput.placeholder = "أدخل اسم الطالب بالكامل أو كود الطالب (9 أرقام)";
+                pInput.placeholder = "أدخل كود الطالب";
+                if (subjGroup) subjGroup.style.display = "none";
+            } else if (role === "parent") {
+                uLabel.textContent = "👨‍👩‍👧 اسم الطالب أو الرقم القومي لولي الأمر";
+                pLabel.textContent = "🔒 كود الطالب / كلمة المرور";
+                uInput.placeholder = "أدخل اسم ابنك/ابنتك أو الرقم القومي (9 أرقام)";
+                pInput.placeholder = "أدخل كود الطالب أو 123456";
+                if (subjGroup) subjGroup.style.display = "none";
+            } else if (role === "teacher") {
+                uLabel.textContent = "الاسم الكامل للمعلم";
+                pLabel.textContent = "🔒 كلمة المرور";
+                uInput.placeholder = "أحمد محمد - لغة عربية";
+                pInput.placeholder = "أدخل كلمة المرور";
+                if (subjGroup) subjGroup.style.display = "block";
+            } else {
+                uLabel.textContent = "اسم المدير";
+                pLabel.textContent = "🔒 كلمة المرور";
+                uInput.placeholder = "أ/ محمد أحمد - مدير المدرسة";
+                pInput.placeholder = "أدخل كلمة المرور";
+                if (subjGroup) subjGroup.style.display = "none";
+            }
+            hideError();
+        }
+
+        function showError(msg) {
+            const el = document.getElementById("loginError");
+            el.textContent = "❌ " + msg;
+            el.classList.remove("hidden");
+        }
+
+        function hideError() {
+            document.getElementById("loginError").classList.add("hidden");
+        }
+
+        function showRegError(msg) {
+            const el = document.getElementById("registerError");
+            el.textContent = "❌ " + msg;
+            el.classList.remove("hidden");
+        }
+
+        function hideRegError() {
+            document.getElementById("registerError").classList.add("hidden");
+        }
+
+        function toggleRegister() {
+            const sec = document.getElementById("registerSection");
+            sec.classList.toggle("hidden");
+            hideRegError();
+        }
+
+        function handleRegister() {
+            hideRegError();
+            const fullName = document.getElementById("regName").value.trim();
+            const department = document.getElementById("regDept") ? document.getElementById("regDept").value.trim() : "";
+            const email = document.getElementById("regEmail").value.trim();
+            const password = document.getElementById("regPassword").value.trim();
+            const subject = document.getElementById("regSubject") ? document.getElementById("regSubject").value.trim() : "";
+            const role = document.getElementById("regRole").value;
+
+            if (!fullName || !email || !password) {
+                showRegError("من فضلك أدخل الاسم الكامل والبريد الإلكتروني وكلمة المرور");
+                return;
+            }
+            if (password.length < 4) {
+                showRegError("كلمة المرور يجب أن تكون 4 أحرف على الأقل");
+                return;
+            }
+            const result = registerUser({ fullName, email, password, subject, department, role });
+            if (!result.success) {
+                showRegError(result.message);
+                return;
+            }
+            const loginRes = loginUser(email, password);
+            if (loginRes && loginRes.success) {
+                if (loginRes.session.role === "admin") {
+                    window.location.href = "admin-dashboard.html";
+                } else {
+                    window.location.href = "teacher-dashboard.html";
+                }
+            } else {
+                showRegError("تم إنشاء الحساب بنجاح. يرجى تسجيل الدخول.");
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const identifier = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const teacherSubject = document.getElementById("teacherSubject") ? document.getElementById("teacherSubject").value.trim() : "";
+
+            if (!identifier || !password) {
+                showError("من فضلك أدخل جميع البيانات المطلوبة");
+                return;
+            }
+
+            const extra = (currentRole === "teacher" && teacherSubject)
+                ? { subject: teacherSubject }
+                : (currentRole === "parent" ? { role: "parent" } : null);
+
+            const loginRes = loginUser(identifier, password, extra);
+            if (!loginRes || !loginRes.success) {
+                showError(loginRes && loginRes.message ? loginRes.message : "بيانات الدخول غير صحيحة");
+                return;
+            }
+
+            const session = loginRes.session;
+
+            if (currentRole === "student" && session.role !== "student") {
+                showError("هذا الحساب ليس حساب طالب");
+                logoutUser();
+                return;
+            }
+            if (currentRole === "parent" && session.role !== "parent") {
+                showError("هذا الحساب ليس حساب ولي أمر");
+                logoutUser();
+                return;
+            }
+            if (currentRole === "teacher" && session.role !== "teacher") {
+                showError("هذا الحساب ليس حساب معلم");
+                logoutUser();
+                return;
+            }
+            if (currentRole === "admin" && session.role !== "admin") {
+                showError("هذا الحساب ليس حساب مدير نظام");
+                logoutUser();
+                return;
+            }
+
+            // Route to dedicated role portal
+            if (session.role === "admin") {
+                window.location.href = "admin-dashboard.html";
+            } else if (session.role === "teacher") {
+                window.location.href = "teacher-dashboard.html";
+            } else if (session.role === "student") {
+                window.location.href = "student-dashboard.html";
+            } else if (session.role === "parent") {
+                window.location.href = "parent-portal.html";
+            }
+        }
+    </script>
+
+</body>
+
+</html>

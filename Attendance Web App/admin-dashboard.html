@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم مدير النظام - مدرسة السادات الابتدائية</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+</head>
+
+<body>
+
+    <header class="attendance-header" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);">
+        <div class="back-home">
+            <button onclick="window.location.href='index.html'">🏠 الرئيسية</button>
+        </div>
+        <h1>👑 لوحة تحكم مدير النظام</h1>
+        <p id="adminHeaderSubtitle">مدرسة السادات الابتدائية بميت غمر - الإدارة العامة والتحكم الشامل</p>
+    </header>
+
+    <main class="attendance-container">
+
+        <!-- Admin Profile Bar -->
+        <div class="student-info-card" style="border-right: 5px solid #4338ca;">
+            <div class="student-avatar" style="background: linear-gradient(135deg, #4338ca, #6366f1);">👑</div>
+            <div class="student-details">
+                <h2 id="adminName">مدير النظام</h2>
+                <p>💼 <strong>الدور:</strong> <span class="tag-admin" style="background:#e0e7ff; color:#3730a3; padding:2px 8px; border-radius:6px; font-weight:bold;">مدير عام المدرسة</span></p>
+                <p>🏫 <strong>المدرسة:</strong> <span>مدرسة السادات الابتدائية - إدارة ميت غمر</span></p>
+                <p id="adminLoginTime" style="color:#64748b; font-size:13px;">وقت الدخول: -</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="logout-btn" onclick="handleLogout()">🚪 تسجيل الخروج</button>
+                <button class="export-btn" onclick="exportBackup()">💾 نسخ احتياطي شامل</button>
+            </div>
+        </div>
+
+        <!-- Live Metrics Cards -->
+        <div class="stats">
+            <div class="stat-card">
+                <span>👨‍🎓</span>
+                <div>
+                    <strong id="metricStudents">710</strong>
+                    <small>إجمالي الطلاب المقيدين</small>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span>🏫</span>
+                <div>
+                    <strong id="metricClasses">16</strong>
+                    <small>الفصول الدراسية</small>
+                </div>
+            </div>
+            <div class="stat-card present-stat">
+                <span>👨‍🏫</span>
+                <div>
+                    <strong id="metricTeachers">0</strong>
+                    <small>هيئة التدريس</small>
+                </div>
+            </div>
+            <div class="stat-card pending-stat">
+                <span>📜</span>
+                <div>
+                    <strong id="metricGrades">6</strong>
+                    <small>الصفوف الدراسية</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Management Sections Tabs -->
+        <div class="nav-menu">
+            <button id="tabOverview" class="active" onclick="switchAdminTab('overview')">📌 العمليات اليومية</button>
+            <button id="tabTeachers" onclick="switchAdminTab('teachers')">👨‍🏫 إدارة المعلمين والصلاحيات</button>
+            <button id="tabPolicy" onclick="switchAdminTab('policy')">⚙️ سياسة التقييم المصرية</button>
+            <button id="tabAudit" onclick="switchAdminTab('audit')">🛡️ سجل التدقيق والأنشطة</button>
+            <button id="tabBackup" onclick="switchAdminTab('backup')">💾 النسخ الاحتياطي وقاعدة البيانات</button>
+        </div>
+
+        <!-- Tab 1: Overview & Shortcuts -->
+        <div id="sectionOverview">
+            <h2 style="margin: 20px 8px 15px; color:#1e293b; font-weight:700;">🚀 بوابات العمليات المباشرة</h2>
+            <div class="dashboard">
+                <div class="card">
+                    <h2>👨‍🎓</h2>
+                    <h3>إدارة الطلاب والباركود</h3>
+                    <p>إضافة وتعديل وحذف الطلاب، وطباعة بطاقات الباركود المجمعة A4 واستيراد وتصدير Excel</p>
+                    <button onclick="window.location.href='students.html'">فتح شؤون الطلاب</button>
+                </div>
+
+                <div class="card">
+                    <h2>📅</h2>
+                    <h3>رصد الحضور والغياب</h3>
+                    <p>تسجيل الحضور اليومي، رصد التأخير والأعذار، قفل واعتماد الجلسات وسجل التعديلات</p>
+                    <button onclick="window.location.href='attendance.html'">فتح سجل الحضور</button>
+                </div>
+
+                <div class="card">
+                    <h2>📷</h2>
+                    <h3>ماسح الباركود المخصص</h3>
+                    <p>المسح السريع لماسحات USB واللاسلكية وكاميرا الهاتف مع التنبيه الصوتي الذكي</p>
+                    <button onclick="window.location.href='scanner.html'" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">
+                        🎥 فتح الماسح السريع
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2>🎓</h2>
+                    <h3>كنترول الدرجات والنتائج</h3>
+                    <p>إدخال واعتماد درجات المواد وفق نظام التقييم المصري والألوان الأربعة</p>
+                    <button onclick="window.location.href='results.html'" style="background: linear-gradient(135deg,#f59e0b,#ef4444);">
+                        فتح بوابة النتائج
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2>📅</h2>
+                    <h3>التقييمات الشهرية</h3>
+                    <p>رصد التقييمات الشهرية لكل شهر (أكتوبر، نوفمبر، ديسمبر، ...) وطباعتها</p>
+                    <button onclick="window.location.href='monthly-evals.html'" style="background: linear-gradient(135deg,#ec4899,#f43f5e);">
+                        فتح التقييمات الشهرية
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2>📊</h2>
+                    <h3>التقارير والإحصائيات</h3>
+                    <p>كشوف الحضور والغياب التفصيلية والإحصائيات البيانية مع التصدير لـ Excel والطباعة</p>
+                    <button onclick="window.location.href='reports.html'">فتح التقارير</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Teachers Management -->
+        <div id="sectionTeachers" class="hidden">
+            <div class="report-box">
+                <h2>➕ إضافة معلم جديد وتوزيع الفصول</h2>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px;">
+                    <input type="text" id="newTeacherName" placeholder="الاسم الكامل (مثال: أ/ محمد عبد الرحمن)">
+                    <input type="text" id="newTeacherUsername" placeholder="اسم المستخدم (Username)">
+                    <input type="password" id="newTeacherPassword" placeholder="كلمة المرور">
+                    <button class="save-btn" onclick="handleCreateTeacher()">➕ إضافة المعلم</button>
+                </div>
+            </div>
+
+            <div class="table-container" style="margin-top: 20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>الاسم الكامل</th>
+                            <th>اسم المستخدم</th>
+                            <th>نوع الحساب</th>
+                            <th>الفصول المسندة</th>
+                            <th>المواد المسندة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teachersTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 3: Egyptian Grading Policy -->
+        <div id="sectionPolicy" class="hidden">
+            <div class="report-box">
+                <h2>📜 إعدادات لائحة التقييم والدراسة لوزارة التربية والتعليم المصرية</h2>
+                <p style="color:#64748b; margin-bottom:15px;">
+                    المرحلة الابتدائية - القرار الوزاري رقم 136 / 133 بشأن نظام التقييم والدراسة لصفوف النقل
+                </p>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:15px; margin-bottom: 20px;">
+                    <div style="background:#f8fafc; padding:15px; border-radius:10px; border-right:4px solid #2563eb;">
+                        <strong>تقييم الشهر الأول:</strong> 15 درجة
+                    </div>
+                    <div style="background:#f8fafc; padding:15px; border-radius:10px; border-right:4px solid #2563eb;">
+                        <strong>تقييم الشهر الثاني:</strong> 15 درجة
+                    </div>
+                    <div style="background:#f8fafc; padding:15px; border-radius:10px; border-right:4px solid #16a34a;">
+                        <strong>المهام الأدائية والأنشطة:</strong> 10 درجات
+                    </div>
+                    <div style="background:#f8fafc; padding:15px; border-radius:10px; border-right:4px solid #16a34a;">
+                        <strong>كشكول الحصة والواجب:</strong> 5 درجات
+                    </div>
+                    <div style="background:#f8fafc; padding:15px; border-radius:10px; border-right:4px solid #f59e0b;">
+                        <strong>المواظبة والسلوك:</strong> 5 درجات
+                    </div>
+                    <div style="background:#f8fafc; padding:15px; border-radius:10px; border-right:4px solid #dc2626;">
+                        <strong>امتحان نهاية الفصل:</strong> 50 درجة
+                    </div>
+                </div>
+
+                <div style="background:#eff6ff; padding:16px; border-radius:12px; border:1px solid #bfdbfe; margin-bottom: 20px;">
+                    <h3 style="color:#1e40af; margin-bottom:10px;">🎨 الألوان المعتمدة للتقييم بالمرحلة الابتدائية:</h3>
+                    <ul style="list-style:none; padding:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
+                        <li style="padding:10px; background:#dbeafe; border-radius:8px; color:#1e3a8a; font-weight:700;">
+                            🔵 الأزرق (85% - 100%): فاق التوقعات امتياز
+                        </li>
+                        <li style="padding:10px; background:#dcfce7; border-radius:8px; color:#14532d; font-weight:700;">
+                            🟢 الأخضر (65% - أقل من 85%): امتلك المعارف والمهارات
+                        </li>
+                        <li style="padding:10px; background:#fef9c3; border-radius:8px; color:#713f12; font-weight:700;">
+                            🟡 الأصفر (50% - أقل من 65%): بحاجة إلى بعض الدعم
+                        </li>
+                        <li style="padding:10px; background:#fee2e2; border-radius:8px; color:#7f1d1d; font-weight:700;">
+                            🔴 الأحمر (أقل من 50%): لم يجتز ويحتاج لدعم كبير
+                        </li>
+                    </ul>
+                </div>
+
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <label><strong>نسبة النجاح الدنيا:</strong></label>
+                    <input type="number" id="passThresholdInput" value="50" min="40" max="60" style="width:100px; padding:8px; border-radius:6px; border:1px solid #cbd5e1;"> %
+                    <button class="save-btn" onclick="savePolicySettings()">حفظ السياسة</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Audit Logs -->
+        <div id="sectionAudit" class="hidden">
+            <div class="report-box">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>🛡️ سجل الأنشطة والتدقيق الأمني (Security Audit Log)</h2>
+                    <button class="print-btn" onclick="refreshAuditLogs()">🔄 تحديث السجل</button>
+                </div>
+                <p style="color:#64748b; margin-bottom:15px;">يتم توثيق كل عملية تسجيل دخول، مسح باركود، تعديل يدوي، أو رصد للدرجات بدقة متناهية.</p>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الوقت والتاريخ</th>
+                                <th>نوع الإجراء</th>
+                                <th>المستخدم</th>
+                                <th>الدور</th>
+                                <th>التفاصيل</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: Backup & Restore -->
+        <div id="sectionBackup" class="hidden">
+            <div class="report-box">
+                <h2>💾 النسخ الاحتياطي واستعادة قاعدة البيانات</h2>
+                <p style="color:#64748b; margin-bottom:20px;">
+                    يمكنك تصدير قاعدة البيانات بالكامل (710 طلاب، الفصول، المعلمين، درجات الشهور، والنتائج) كملف JSON مشفر وموقع للحفظ على جهاز المدرسة أو السحابة.
+                </p>
+
+                <div class="action-buttons">
+                    <button class="export-btn" onclick="exportBackup()" style="font-size:16px; padding:12px 24px;">
+                        📥 تصدير نسخة احتياطية كاملة (JSON)
+                    </button>
+                    <label class="import-btn" style="cursor:pointer; font-size:16px; padding:12px 24px;">
+                        📤 استعادة من نسخة احتياطية
+                        <input type="file" id="backupFileInput" accept=".json" style="display:none;" onchange="handleRestore(event)">
+                    </label>
+                </div>
+
+                <div style="margin-top:25px; padding:15px; background:#f8fafc; border-radius:10px; border-right:4px solid #16a34a;">
+                    <strong>💡 نصيحة أمان المدرسة:</strong> يُنصح بحفظ نسخة احتياطية دورية أسبوعياً في نهاية كل يوم خميس وتخزينها في قرص خارجي مستقل.
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="app-footer" style="text-align:center; padding:18px 12px; margin-top:35px; background:#f8fafc; border-top:1px solid #e2e8f0; color:#64748b; font-size:13px; line-height:1.6;">
+        <div style="max-width:900px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div>
+                🏫 <strong>مدرسة السادات الابتدائية بميت غمر</strong> - نظام الإدارة المدرسية والرصد الذكي
+            </div>
+            <div style="font-size:12px; color:#475569;">
+                تم التصميم والبرمجة والتطوير وحقوق الملكية الكاملة بواسطة: <strong style="color:#4f46e5; font-size:13px;">أماني محمد السيد</strong> (Amany Mohamed El-Sayed) © 2025 - 2026
+            </div>
+        </div>
+    </footer>
+
+    <!-- Core Scripts -->
+    <script src="core/security.js"></script>
+    <script src="core/egyptian-grading.js"></script>
+    <script src="core/audit.js"></script>
+    <script src="database.js"></script>
+    <script src="utils.js"></script>
+
+    <script>
+        function checkAdminAuth() {
+            const session = getCurrentSession();
+            if (!session || session.role !== "admin") {
+                window.location.href = "login.html";
+                return null;
+            }
+            const adminFullName = session.fullName || session.name || "محمد أحمد";
+            const adminTitle = `أ/ ${adminFullName} - مدير المدرسة`;
+            document.getElementById("adminName").textContent = adminTitle;
+            const subtitleEl = document.getElementById("adminHeaderSubtitle");
+            if (subtitleEl) subtitleEl.textContent = adminTitle;
+            document.getElementById("adminLoginTime").textContent = "وقت الدخول: " + new Date(session.loginTime || session.createdAt).toLocaleString('ar-EG');
+            return session;
+        }
+
+        function loadMetrics() {
+            const db = getDatabase();
+            document.getElementById("metricStudents").textContent = db.students.length;
+            document.getElementById("metricClasses").textContent = db.classes.length;
+            document.getElementById("metricGrades").textContent = db.grades.length;
+            const users = getAllUsers();
+            const teachers = users.filter(u => u.role === "teacher");
+            document.getElementById("metricTeachers").textContent = teachers.length;
+        }
+
+        function switchAdminTab(tabName) {
+            const tabs = ["overview", "teachers", "policy", "audit", "backup"];
+            tabs.forEach(t => {
+                const btn = document.getElementById("tab" + t.charAt(0).toUpperCase() + t.slice(1));
+                const sec = document.getElementById("section" + t.charAt(0).toUpperCase() + t.slice(1));
+                if (btn) btn.classList.remove("active");
+                if (sec) sec.classList.add("hidden");
+            });
+
+            const activeBtn = document.getElementById("tab" + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            const activeSec = document.getElementById("section" + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            if (activeBtn) activeBtn.classList.add("active");
+            if (activeSec) activeSec.classList.remove("hidden");
+
+            if (tabName === "teachers") loadTeachersTable();
+            if (tabName === "audit") refreshAuditLogs();
+        }
+
+        function loadTeachersTable() {
+            const tbody = document.getElementById("teachersTableBody");
+            if (!tbody) return;
+            const users = getAllUsers();
+            const db = getDatabase();
+
+            tbody.innerHTML = "";
+            users.forEach((u, idx) => {
+                const tr = document.createElement("tr");
+
+                const classNames = (u.assignedClasses || []).map(cid => {
+                    const cls = db.classes.find(c => c.id === cid);
+                    return cls ? cls.name : cid;
+                }).join(", ") || "جميع الفصول";
+
+                const subjectNames = u.subject || (u.assignedSubjects || []).map(sid => {
+                    const subj = getAllSubjects().find(s => s.id === sid);
+                    return subj ? subj.name : sid;
+                }).join(", ") || "جميع المواد";
+
+                tr.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td><strong>${u.fullName || u.name}</strong></td>
+                    <td dir="ltr" style="font-family:monospace;">${u.email || u.username}</td>
+                    <td>${u.role === "admin" ? "👑 مدير" : "👨‍🏫 معلم"}</td>
+                    <td>${classNames}</td>
+                    <td>${subjectNames}</td>
+                    <td>
+                        ${u.role !== "admin" ? `<button class="delete-btn" onclick="handleDeleteTeacher(${u.id})">🗑️ حذف</button>` : `<small style="color:#64748b;">رئيسي</small>`}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function handleCreateTeacher() {
+            const fullName = document.getElementById("newTeacherName").value.trim();
+            const email = document.getElementById("newTeacherUsername").value.trim();
+            const password = document.getElementById("newTeacherPassword").value.trim();
+
+            if (!fullName || !email || !password) {
+                showToast("يرجى ملء جميع الحقول المطلوبة", "warning");
+                return;
+            }
+
+            const res = registerUser({ fullName, email, password, role: "teacher" });
+            if (res.success) {
+                showToast(res.message, "success");
+                document.getElementById("newTeacherName").value = "";
+                document.getElementById("newTeacherUsername").value = "";
+                document.getElementById("newTeacherPassword").value = "";
+                loadTeachersTable();
+                loadMetrics();
+            } else {
+                showToast(res.message, "error");
+            }
+        }
+
+        function handleDeleteTeacher(userId) {
+            if (!confirm("هل أنت متأكد من حذف هذا الحساب؟")) return;
+            const res = deleteUser(userId);
+            if (res.success) {
+                showToast("تم حذف الحساب بنجاح", "success");
+                loadTeachersTable();
+                loadMetrics();
+            } else {
+                showToast(res.message || "فشل الحذف", "error");
+            }
+        }
+
+        function refreshAuditLogs() {
+            const tbody = document.getElementById("auditTableBody");
+            if (!tbody || !window.AuditLogger) return;
+
+            const logs = AuditLogger.getAllLogs().slice(0, 50);
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#888;">لا توجد سجلات بعد</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(l => `
+                <tr>
+                    <td dir="ltr" style="font-family:monospace; font-size:12px;">${new Date(l.timestamp).toLocaleString('ar-EG')}</td>
+                    <td><strong>${l.action}</strong></td>
+                    <td>${l.username}</td>
+                    <td><span style="font-size:12px; background:#f1f5f9; padding:2px 6px; border-radius:4px;">${l.role}</span></td>
+                    <td style="font-size:12px; color:#475569;">${JSON.stringify(l.details)}</td>
+                </tr>
+            `).join("");
+        }
+
+        function exportBackup() {
+            const json = exportFullDatabaseJSON();
+            const dateStr = new Date().toISOString().split('T')[0];
+            const blob = new Blob([json], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `backup_sadat_school_${dateStr}.json`;
+            a.click();
+            showToast("تم تنزيل النسخة الاحتياطية بنجاح", "success");
+        }
+
+        function handleRestore(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const res = importFullDatabaseJSON(e.target.result);
+                if (res.success) {
+                    showToast(`تمت الاستعادة بنجاح (${res.studentCount} طالب)`, "success");
+                    loadMetrics();
+                } else {
+                    showToast(res.message, "error");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = "";
+        }
+
+        function savePolicySettings() {
+            const threshold = document.getElementById("passThresholdInput").value;
+            showToast(`تم تحديث سياسة التقييم بنجاح (حد النجاح: ${threshold}%)`, "success");
+        }
+
+        function handleLogout() {
+            logoutUser();
+            window.location.href = "login.html";
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if (checkAdminAuth()) {
+                loadMetrics();
+            }
+        });
+    </script>
+</body>
+</html>

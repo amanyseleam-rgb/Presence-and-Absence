@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>إدارة الطلاب</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+
+    <header class="attendance-header">
+        <div class="back-home">
+            <button onclick="window.location.href='index.html'">
+                🏠 العودة للرئيسية
+            </button>
+        </div>
+        <h1>👨‍🎓 إدارة الطلاب</h1>
+        <p>إضافة وتعديل وحذف بيانات الطلاب مع توليد الباركود</p>
+    </header>
+
+    <main class="attendance-container">
+
+        <div class="top-bar">
+            <div>
+                <label for="gradeSelect">📚 الصف الدراسي</label>
+                <select id="gradeSelect" onchange="populateClasses()">
+                    <option value="">اختر الصف</option>
+                </select>
+            </div>
+            <div>
+                <label for="classSelect">🏫 الفصل</label>
+                <select id="classSelect" onchange="displayStudents()">
+                    <option value="">اختر الفصل</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="student-form">
+            <input type="text" id="studentNationalId" placeholder="🆔 كود الطالب (ID)" maxlength="9">
+            <input type="text" id="studentName" placeholder="👤 اسم الطالب">
+            <select id="studentGender">
+                <option value="ذكر">ذكر</option>
+                <option value="أنثى">أنثى</option>
+            </select>
+            <button onclick="addNewStudent()">➕ إضافة طالب</button>
+        </div>
+
+        <div class="report-box">
+            <h2>🔎 البحث والإجراءات</h2>
+            <input type="text" id="studentSearch" placeholder="البحث بالاسم أو id...">
+            <div class="action-buttons">
+                <button class="export-btn" onclick="exportStudents()">📥 تصدير البيانات Excel</button>
+                <label class="import-btn" style="cursor:pointer;">
+                    📤 استيراد من Excel
+                    <input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleImport(event)">
+                </label>
+                <button class="print-btn" onclick="printAllStudentBarcodes()">🏷️ طباعة جميع الباركودات</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>م</th>
+                        <th>🆔 id</th>
+                        <th>👤 اسم الطالب</th>
+                        <th>🚻 الجنس</th>
+                        <th>🏫 الفصل</th>
+                        <th>⚙️ الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsList"></tbody>
+            </table>
+        </div>
+
+        <!-- Edit Student Modal -->
+        <div id="editStudentModal" class="barcode-modal hidden">
+            <div class="barcode-modal-content" style="max-width:480px; text-align:right;">
+                <h3 style="margin-bottom:15px; color:#1e293b;">✏️ تعديل بيانات الطالب</h3>
+                <input type="hidden" id="editStudentId">
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label>👤 اسم الطالب:</label>
+                    <input type="text" id="editStudentName" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label>🆔 كود الطالب (الباركود - 9 أرقام):</label>
+                    <input type="text" id="editStudentNid" maxlength="9" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; font-family:monospace;">
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label>🚻 الجنس:</label>
+                    <select id="editStudentGender" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+                        <option value="ذكر">ذكر</option>
+                        <option value="أنثى">أنثى</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:18px;">
+                    <label>🏫 الفصل الدراسي:</label>
+                    <select id="editStudentClass" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px;">
+                    </select>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button class="save-btn" onclick="saveStudentEdit()">💾 حفظ التعديلات</button>
+                    <button class="close-modal" onclick="closeEditModal()">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student History Modal -->
+        <div id="studentHistoryModal" class="barcode-modal hidden">
+            <div class="barcode-modal-content" style="max-width:600px; text-align:right;">
+                <h3 id="historyStudentTitle" style="margin-bottom:6px; color:#1e293b;">📊 السجل الأكاديمي والحضور</h3>
+                <p id="historyStudentSub" style="color:#64748b; font-size:13px; margin-bottom:15px;"></p>
+                <div id="historyContent" style="max-height:350px; overflow-y:auto;">
+                    <!-- Filled dynamically -->
+                </div>
+                <div style="text-align:left; margin-top:15px;">
+                    <button class="close-modal" onclick="closeHistoryModal()">إغلاق</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="app-footer" style="text-align:center; padding:18px 12px; margin-top:35px; background:#f8fafc; border-top:1px solid #e2e8f0; color:#64748b; font-size:13px; line-height:1.6;">
+        <div style="max-width:900px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div>
+                🏫 <strong>مدرسة السادات الابتدائية بميت غمر</strong> - نظام الإدارة المدرسية والرصد الذكي
+            </div>
+            <div style="font-size:12px; color:#475569;">
+                تم التصميم والبرمجة والتطوير وحقوق الملكية الكاملة بواسطة: <strong style="color:#4f46e5; font-size:13px;">أماني محمد السيد</strong> (Amany Mohamed El-Sayed) © 2025 - 2026
+            </div>
+        </div>
+    </footer>
+
+    <script src="core/security.js"></script>
+    <script src="core/audit.js"></script>
+    <script src="core/barcode.js"></script>
+    <script src="core/egyptian-grading.js"></script>
+    <script src="database.js"></script>
+    <script src="utils.js"></script>
+    <script src="students.js"></script>
+
+</body>
+
+</html>

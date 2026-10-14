@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المعلم - مدرسة السادات الابتدائية</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+</head>
+
+<body>
+
+    <header class="attendance-header">
+        <h1 id="teacherHeaderTitle">👨‍🏫 لوحة تحكم المعلم</h1>
+        <p id="teacherHeaderSubtitle">إدارة الحضور والنتائج والطلاب</p>
+    </header>
+
+    <main class="attendance-container">
+
+        <div id="adminBanner" class="hidden" style="margin-bottom:20px; background:linear-gradient(135deg, #e0e7ff, #ede9fe); padding:16px 20px; border-radius:12px; border:1px solid #c7d2fe; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <strong style="color:#3730a3; font-size:16px;">👑 أنت مسجل كمدير نظام للمدرسة</strong>
+                <p style="margin:4px 0 0; color:#4338ca; font-size:13px;">تتوفر لديك لوحة التحكم الشاملة لإدارة المعلمين والسياسة وسجل التدقيق والنسخ الاحتياطي.</p>
+            </div>
+            <button onclick="window.location.href='admin-dashboard.html'" style="background:#4338ca; color:white; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:bold;">
+                👑 فتح لوحة مدير النظام
+            </button>
+        </div>
+
+        <div class="student-info-card">
+            <div class="student-avatar" style="background: linear-gradient(135deg,#f59e0b,#ef4444);">👨‍🏫</div>
+            <div class="student-details">
+                <h2 id="teacherName">-</h2>
+                <p>💼 <strong>نوع الحساب:</strong> <span id="teacherRole">-</span></p>
+                <p>📧 <strong>البريد الإلكتروني:</strong> <span id="teacherEmail">-</span></p>
+                <p>📚 <strong>المادة التي تدرسها:</strong> <span id="teacherSubjectText" style="color:#16a34a; font-weight:bold;">-</span> 
+                   <button onclick="editTeacherSubject()" style="background:#e0f2fe; color:#0369a1; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:12px; margin-right:8px;">✏️ تعديل المادة</button>
+                </p>
+                <p>🏫 <strong>الفصول المسندة:</strong> <span id="teacherAssignedClasses" style="color:#2563eb; font-weight:bold;">-</span></p>
+                <p id="loginTime" style="color:#64748b; font-size:13px;">آخر تسجيل دخول: -</p>
+            </div>
+            <button class="logout-btn" onclick="logout()">🚪 تسجيل الخروج</button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-menu" style="margin: 25px 0 20px;">
+            <button id="tabTeacherOverview" class="active" onclick="switchTeacherTab('overview')">📌 النظرة العامة</button>
+            <button id="tabTeacherEvals" onclick="switchTeacherTab('evals')">📅 التقييمات الشهرية</button>
+            <button id="tabTeacherSchedule" onclick="switchTeacherTab('schedule')">🕒 جدول الحصص الأسبوعي</button>
+            <button id="tabTeacherResults" onclick="switchTeacherTab('results')">🎓 رصد ورفع الدرجات</button>
+            <button id="tabTeacherClasses" onclick="switchTeacherTab('classes')">🏫 الفصول المسندة والطلاب</button>
+        </div>
+
+        <!-- 1. OVERVIEW SECTION -->
+        <div id="sectionTeacherOverview">
+            <div class="stats">
+                <div class="stat-card">
+                    <span>👨‍🎓</span>
+                    <div>
+                        <strong id="totalStudents">0</strong>
+                        <small>إجمالي الطلاب</small>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span>🏫</span>
+                    <div>
+                        <strong id="totalClasses">0</strong>
+                        <small>عدد الفصول</small>
+                    </div>
+                </div>
+                <div class="stat-card present-stat">
+                    <span>📚</span>
+                    <div>
+                        <strong id="totalGrades">6</strong>
+                        <small>الصفوف الدراسية</small>
+                    </div>
+                </div>
+                <div class="stat-card pending-stat">
+                    <span>📋</span>
+                    <div>
+                        <strong id="todayAttendance">0</strong>
+                        <small>سجلات الحضور اليوم</small>
+                    </div>
+                </div>
+            </div>
+
+            <h2 style="margin: 20px 8px 15px; color:#1e293b; font-weight:700;">📌 الإجراءات السريعة</h2>
+
+            <div class="dashboard">
+                <div class="card">
+                    <h2>📅</h2>
+                    <h3>التقييمات الشهرية</h3>
+                    <p>إدخال وعرض درجات التقييمات الشهرية بمكوناتها الستة</p>
+                    <button onclick="switchTeacherTab('evals')" style="background: linear-gradient(135deg,#ec4899,#f43f5e);">
+                        📅 فتح التقييمات
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2>🕒</h2>
+                    <h3>جدول الحصص</h3>
+                    <p>عرض وتعديل جدول الحصص الأسبوعي للمعلم وطباعته</p>
+                    <button onclick="switchTeacherTab('schedule')" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">
+                        🕒 فتح الجدول
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2>🎓</h2>
+                    <h3>رصد ورفع الدرجات</h3>
+                    <p>رصد درجات أعمال السنة والامتحانات واستيرادها من Excel</p>
+                    <button onclick="switchTeacherTab('results')" style="background: linear-gradient(135deg,#f59e0b,#ef4444);">
+                        🎓 رصد الدرجات
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2>🏫</h2>
+                    <h3>فصولي المسندة</h3>
+                    <p>استعراض الفصول المسندة وقوائم الطلاب ونسب الحضور</p>
+                    <button onclick="switchTeacherTab('classes')" style="background: linear-gradient(135deg,#059669,#10b981);">
+                        🏫 استعراض الفصول
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2>📅</h2>
+                    <h3>رصد الحضور والغياب</h3>
+                    <p>تسجيل حضور الطلاب عبر الباركود أو يدوياً بالفصل</p>
+                    <button onclick="navigate('attendance.html')">فتح رصد الغياب</button>
+                </div>
+
+                <div class="card">
+                    <h2>👨‍🎓</h2>
+                    <h3>إدارة الطلاب</h3>
+                    <p>إضافة وتعديل وحذف بيانات الطلاب مع الباركود</p>
+                    <button onclick="navigate('students.html')">فتح إدارة الطلاب</button>
+                </div>
+
+                <div class="card">
+                    <h2>📊</h2>
+                    <h3>تقارير الحضور</h3>
+                    <p>تقارير مفصلة عن حضور وغياب كل طالب</p>
+                    <button onclick="navigate('reports.html')">عرض التقارير</button>
+                </div>
+
+                <div class="card">
+                    <h2>📈</h2>
+                    <h3>الإحصائيات البيانية</h3>
+                    <p>متابعة نسب الحضور والغياب بتصور بياني</p>
+                    <button onclick="navigate('statistics.html')">فتح الإحصائيات</button>
+                </div>
+
+                <div class="card">
+                    <h2>🏠</h2>
+                    <h3>الصفحة الرئيسية</h3>
+                    <p>العودة للوحة التحكم الرئيسية للمشروع</p>
+                    <button onclick="navigate('index.html')">الرئيسية</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;" class="report-box">
+                <h2>🚀 إجراءات إضافية</h2>
+                <div class="action-buttons">
+                    <button class="export-btn" onclick="exportFullDatabase()">📥 تصدير قاعدة البيانات كاملة</button>
+                    <button class="import-btn" onclick="document.getElementById('fullImport').click()">
+                        📤 استيراد قاعدة بيانات
+                    </button>
+                    <input type="file" id="fullImport" accept=".json" style="display:none;" onchange="importFullDatabase(event)">
+                    <button class="print-btn" onclick="window.print()">🖨️ طباعة هذه الصفحة</button>
+                </div>
+                <div class="input-hint" style="margin-top: 10px;">
+                    💡 يمكنك نسخ نسخة احتياطية من البيانات كاملة كملف JSON والاحتفاظ بها لأي وقت
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. EVALUATIONS SECTION -->
+        <div id="sectionTeacherEvals" class="hidden">
+            <div class="top-bar">
+                <div>
+                    <label for="tEvalClass">🏫 الفصل الدراسي</label>
+                    <select id="tEvalClass" onchange="loadTeacherEvals()"></select>
+                </div>
+                <div>
+                    <label for="tEvalMonth">📅 الشهر</label>
+                    <select id="tEvalMonth" onchange="loadTeacherEvals()"></select>
+                </div>
+                <div>
+                    <label>📚 مادتك التدريسية</label>
+                    <div id="tEvalSubjectBadge" style="padding:10px 14px; background:#f0fdf4; border:1px solid #bbf7d0; color:#16a34a; font-weight:bold; border-radius:8px;">
+                        -
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons" style="margin-bottom:15px;">
+                <button class="export-btn" onclick="saveAllTeacherEvals()" style="background:linear-gradient(135deg,#16a34a,#22c55e);">
+                    💾 حفظ كل التقييمات
+                </button>
+                <button class="export-btn" onclick="exportTeacherEvalsExcel()">
+                    📥 تصدير كشف التقييمات Excel
+                </button>
+                <button class="print-btn" onclick="printSection('teacherEvalsTableContainer', 'كشف التقييمات الشهرية')">
+                    🖨️ طباعة كشف التقييمات
+                </button>
+            </div>
+
+            <div class="input-hint" style="margin-bottom:12px;">
+                💡 نظام التقييم الابتدائي المصري: امتحان الشهر (50) + واجب (5) + مشاركة (5) + سلوك (10) + عملي (15) + شفوي (15) = 100 درجة تلقائياً.
+            </div>
+
+            <div id="teacherEvalsTableContainer" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>👨‍🎓 اسم الطالب</th>
+                            <th title="امتحان الشهر (50)">امتحان (50)</th>
+                            <th title="كشكول الواجب (5)">واجب (5)</th>
+                            <th title="المشاركة والتفاعل (5)">مشاركة (5)</th>
+                            <th title="السلوك والمواظبة (10)">سلوك (10)</th>
+                            <th title="التقييم العملي (15)">عملي (15)</th>
+                            <th title="التقييم الشفوي (15)">شفوي (15)</th>
+                            <th>المجموع (100)</th>
+                            <th>التقدير</th>
+                            <th>ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherEvalsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. TEACHING SCHEDULE SECTION -->
+        <div id="sectionTeacherSchedule" class="hidden">
+            <div class="top-bar">
+                <div>
+                    <label>🕒 جدول الحصص الأسبوعي</label>
+                    <p style="margin:4px 0 0; color:#64748b; font-size:13px;">جدول الحصص المخصص للمعلم بمدرسة السادات الابتدائية</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="print-btn" onclick="printSection('teacherScheduleTableContainer', 'جدول الحصص الأسبوعي للمعلم')">
+                        🖨️ طباعة الجدول
+                    </button>
+                    <button class="export-btn" onclick="resetTeacherScheduleToDefault()" style="background:#64748b;">
+                        🔄 استعادة الجدول الافتراضي
+                    </button>
+                </div>
+            </div>
+
+            <div class="input-hint" style="margin-bottom:15px;">
+                💡 انقر فوق أي حصة في الجدول لتعديل الفصل أو المادة المحددة وحفظ التغيير فورياً.
+            </div>
+
+            <div id="teacherScheduleTableContainer" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="min-width:100px;">اليوم</th>
+                            <th>الحصة 1<br><small style="color:#64748b;font-weight:normal;">8:00 - 8:45</small></th>
+                            <th>الحصة 2<br><small style="color:#64748b;font-weight:normal;">8:45 - 9:30</small></th>
+                            <th>الحصة 3<br><small style="color:#64748b;font-weight:normal;">9:45 - 10:30</small></th>
+                            <th>الحصة 4<br><small style="color:#64748b;font-weight:normal;">10:30 - 11:15</small></th>
+                            <th>الحصة 5<br><small style="color:#64748b;font-weight:normal;">11:30 - 12:15</small></th>
+                            <th>الحصة 6<br><small style="color:#64748b;font-weight:normal;">12:15 - 1:00</small></th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherScheduleTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. RESULTS / GRADES SECTION -->
+        <div id="sectionTeacherResults" class="hidden">
+            <div class="top-bar">
+                <div>
+                    <label for="tResultClass">🏫 الفصل الدراسي</label>
+                    <select id="tResultClass" onchange="loadTeacherResults()"></select>
+                </div>
+                <div>
+                    <label for="tResultTerm">📝 الفصل الدراسي (الترم)</label>
+                    <select id="tResultTerm" onchange="loadTeacherResults()">
+                        <option value="الفصل الأول">الفصل الأول</option>
+                        <option value="الفصل الثاني">الفصل الثاني</option>
+                    </select>
+                </div>
+                <div>
+                    <label>📚 مادتك التدريسية</label>
+                    <div id="tResultSubjectBadge" style="padding:10px 14px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; font-weight:bold; border-radius:8px;">
+                        -
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons" style="margin-bottom:15px;">
+                <button class="export-btn" onclick="saveAllTeacherResults()" style="background:linear-gradient(135deg,#2563eb,#3b82f6);">
+                    💾 حفظ الدرجات
+                </button>
+                <button class="import-btn" onclick="document.getElementById('resultsUploadInput').click()" style="background:linear-gradient(135deg,#059669,#10b981);">
+                    📤 رفع واستيراد درجات من Excel
+                </button>
+                <input type="file" id="resultsUploadInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleTeacherResultsUpload(event)">
+                <button class="export-btn" onclick="exportTeacherResultsExcel()">
+                    📥 تصدير درجات الفصل Excel
+                </button>
+                <button class="print-btn" onclick="printSection('teacherResultsTableContainer', 'كشف درجات الطلاب')">
+                    🖨️ طباعة كشف الدرجات
+                </button>
+            </div>
+
+            <div id="teacherResultsTableContainer" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>👨‍🎓 اسم الطالب</th>
+                            <th>🆔 كود الطالب</th>
+                            <th>🏆 الدرجة المستحقة</th>
+                            <th>📊 النهاية العظمى</th>
+                            <th>📈 النسبة</th>
+                            <th>🏅 التقدير اللوني</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherResultsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5. ASSIGNED CLASSES SECTION -->
+        <div id="sectionTeacherClasses" class="hidden">
+            <h2 style="margin: 0 0 15px; color:#1e293b; font-weight:700;">🏫 الفصول المسندة لإشرافك وتدريسك</h2>
+            <div id="teacherClassesGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:18px; margin-bottom:25px;">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div id="selectedClassDetailsBox" class="report-box hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                    <div>
+                        <h3 id="selectedClassTitle" style="margin:0; color:#1e293b; font-size:18px;">قائمة طلاب الفصل</h3>
+                        <p id="selectedClassSubtitle" style="margin:4px 0 0; color:#64748b; font-size:13px;">-</p>
+                    </div>
+                    <button class="print-btn" onclick="printSection('classStudentsTableContainer', 'كشف طلاب الفصل')">
+                        🖨️ طباعة كشف الفصل
+                    </button>
+                </div>
+
+                <div id="classStudentsTableContainer" class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>م</th>
+                                <th>👨‍🎓 اسم الطالب</th>
+                                <th>🆔 الرقم القومي / كود الطالب</th>
+                                <th>🚻 النوع</th>
+                                <th>🏷️ الباركود</th>
+                                <th>⚡ إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="classStudentsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="app-footer" style="text-align:center; padding:18px 12px; margin-top:35px; background:#f8fafc; border-top:1px solid #e2e8f0; color:#64748b; font-size:13px; line-height:1.6;">
+        <div style="max-width:900px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div>
+                🏫 <strong>مدرسة السادات الابتدائية بميت غمر</strong> - نظام الإدارة المدرسية والرصد الذكي
+            </div>
+            <div style="font-size:12px; color:#475569;">
+                تم التصميم والبرمجة والتطوير وحقوق الملكية الكاملة بواسطة: <strong style="color:#4f46e5; font-size:13px;">أماني محمد السيد</strong> (Amany Mohamed El-Sayed) © 2025 - 2026
+            </div>
+        </div>
+    </footer>
+
+    <script src="core/security.js"></script>
+    <script src="core/egyptian-grading.js"></script>
+    <script src="core/audit.js"></script>
+    <script src="database.js"></script>
+    <script src="utils.js"></script>
+    <script>
+        let currentSession = null;
+        let teacherAssignedClassIds = [];
+        let teacherSubjectName = "";
+
+        function initTeacherDashboard() {
+            currentSession = getCurrentSession();
+            if (!currentSession || (currentSession.role !== "teacher" && currentSession.role !== "admin")) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (currentSession.role === "admin") {
+                const banner = document.getElementById("adminBanner");
+                if (banner) banner.classList.remove("hidden");
+            }
+
+            const fullName = currentSession.fullName || currentSession.name || "أحمد محمد";
+            teacherSubjectName = currentSession.subject ? currentSession.subject : "جميع المواد";
+            const realTitle = currentSession.role === "admin"
+                ? `أ/ ${fullName} - مدير المدرسة`
+                : `أ/ ${fullName} - مدرس ${teacherSubjectName}`;
+
+            const subtitleEl = document.getElementById("teacherHeaderSubtitle");
+            if (subtitleEl) subtitleEl.textContent = realTitle;
+
+            document.getElementById("teacherName").textContent = realTitle;
+            document.getElementById("teacherEmail").textContent = currentSession.email || "-";
+            document.getElementById("teacherSubjectText").textContent = currentSession.subject || "غير محدد (حر)";
+            document.getElementById("teacherRole").textContent =
+                currentSession.role === "admin" ? "مدير النظام 👑" : "معلم 👨‍🏫";
+
+            try {
+                document.getElementById("loginTime").textContent =
+                    "آخر تسجيل دخول: " + new Date(currentSession.loginTime || currentSession.createdAt).toLocaleString('ar-EG');
+            } catch (e) {}
+
+            const db = initDatabase();
+
+            // Populate assigned classes
+            const assignedClassesEl = document.getElementById("teacherAssignedClasses");
+            if (currentSession.role === "admin" || !currentSession.assignedClasses || currentSession.assignedClasses.length === 0) {
+                teacherAssignedClassIds = db.classes.map(c => c.id);
+                if (assignedClassesEl) assignedClassesEl.textContent = "جميع الفصول متاح الإشراف عليها";
+            } else {
+                teacherAssignedClassIds = currentSession.assignedClasses;
+                const cnames = teacherAssignedClassIds.map(cid => {
+                    const c = db.classes.find(cls => cls.id === cid);
+                    return c ? c.name : cid;
+                }).join(" ، ");
+                if (assignedClassesEl) assignedClassesEl.textContent = cnames || "غير محدد";
+            }
+
+            document.getElementById("totalStudents").textContent = db.students.length;
+            document.getElementById("totalClasses").textContent = db.classes.length;
+            document.getElementById("totalGrades").textContent = db.grades.length;
+
+            const today = new Date().toISOString().split('T')[0];
+            let count = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith("attendance_" + today)) count++;
+            }
+            document.getElementById("todayAttendance").textContent = count;
+
+            // Populate class dropdowns in tabs
+            populateDropdowns(db);
+            loadTeacherSchedule();
+            renderTeacherClassesGrid(db);
+        }
+
+        function populateDropdowns(db) {
+            const classesToUse = db.classes.filter(c => teacherAssignedClassIds.includes(c.id));
+            const availableClasses = classesToUse.length > 0 ? classesToUse : db.classes;
+
+            const evalClassSelect = document.getElementById("tEvalClass");
+            const resultClassSelect = document.getElementById("tResultClass");
+
+            if (evalClassSelect) {
+                evalClassSelect.innerHTML = availableClasses.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+            }
+            if (resultClassSelect) {
+                resultClassSelect.innerHTML = availableClasses.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+            }
+
+            const evalMonthSelect = document.getElementById("tEvalMonth");
+            if (evalMonthSelect) {
+                evalMonthSelect.innerHTML = getMonthsList().map(m => `<option value="${m.id}">${m.name}</option>`).join("");
+            }
+
+            const subjBadge1 = document.getElementById("tEvalSubjectBadge");
+            if (subjBadge1) subjBadge1.textContent = teacherSubjectName;
+
+            const subjBadge2 = document.getElementById("tResultSubjectBadge");
+            if (subjBadge2) subjBadge2.textContent = teacherSubjectName;
+        }
+
+        function switchTeacherTab(tab) {
+            const tabs = ["overview", "evals", "schedule", "results", "classes"];
+            const tabIds = ["tabTeacherOverview", "tabTeacherEvals", "tabTeacherSchedule", "tabTeacherResults", "tabTeacherClasses"];
+            const sectionIds = ["sectionTeacherOverview", "sectionTeacherEvals", "sectionTeacherSchedule", "sectionTeacherResults", "sectionTeacherClasses"];
+
+            tabs.forEach((t, i) => {
+                const isActive = t === tab;
+                const btn = document.getElementById(tabIds[i]);
+                const sec = document.getElementById(sectionIds[i]);
+                if (btn) btn.classList.toggle("active", isActive);
+                if (sec) sec.classList.toggle("hidden", !isActive);
+            });
+
+            if (tab === "evals") loadTeacherEvals();
+            if (tab === "results") loadTeacherResults();
+            if (tab === "schedule") loadTeacherSchedule();
+        }
+
+        // ==========================================
+        // 1. EVALUATIONS TAB LOGIC (6 COMPONENTS)
+        // ==========================================
+        function loadTeacherEvals() {
+            const classId = parseInt(document.getElementById("tEvalClass").value);
+            const monthId = parseInt(document.getElementById("tEvalMonth").value);
+            if (!classId) return;
+
+            const db = initDatabase();
+            const students = getStudentsByClass(classId);
+            const table = document.getElementById("teacherEvalsTableBody");
+            table.innerHTML = "";
+
+            if (students.length === 0) {
+                table.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:25px;color:#888;">لا يوجد طلاب في هذا الفصل</td></tr>`;
+                return;
+            }
+
+            const mdb = initMonthlyEvalsDB();
+
+            // Find matching subject ID from teacher subject name
+            const subjectId = (typeof matchSubjectByName === "function")
+                ? matchSubjectByName(teacherSubjectName)
+                : 1;
+
+            students.forEach((st, idx) => {
+                const existing = mdb.evals.find(e =>
+                    e.studentId === st.id &&
+                    e.classId === classId &&
+                    e.monthId === monthId &&
+                    e.subjectId === subjectId
+                );
+
+                const comp = existing?.components || {
+                    exam: existing?.score ? Math.min(50, existing.score * 0.5) : 0,
+                    homework: 0,
+                    participation: 0,
+                    behavior: 0,
+                    practical: 0,
+                    oral: 0
+                };
+                const totalScore = existing?.score ?? 0;
+                const band = window.EgyptianGrading ? EgyptianGrading.getColorBand(totalScore) : { label: "-", colorHex: "#64748b", bgHex: "#f1f5f9" };
+
+                table.innerHTML += `
+                    <tr data-student-id="${st.id}">
+                        <td>${idx + 1}</td>
+                        <td style="font-weight:700; text-align:right;">${st.name}</td>
+                        <td><input type="number" class="score-input comp-exam" min="0" max="50" step="0.5" value="${comp.exam ?? 0}" oninput="updateTeacherRow(this)"></td>
+                        <td><input type="number" class="score-input comp-homework" min="0" max="5" step="0.5" value="${comp.homework ?? 0}" oninput="updateTeacherRow(this)"></td>
+                        <td><input type="number" class="score-input comp-participation" min="0" max="5" step="0.5" value="${comp.participation ?? 0}" oninput="updateTeacherRow(this)"></td>
+                        <td><input type="number" class="score-input comp-behavior" min="0" max="10" step="0.5" value="${comp.behavior ?? 0}" oninput="updateTeacherRow(this)"></td>
+                        <td><input type="number" class="score-input comp-practical" min="0" max="15" step="0.5" value="${comp.practical ?? 0}" oninput="updateTeacherRow(this)"></td>
+                        <td><input type="number" class="score-input comp-oral" min="0" max="15" step="0.5" value="${comp.oral ?? 0}" oninput="updateTeacherRow(this)"></td>
+                        <td><strong class="row-total" style="font-size:15px; color:#1e293b;">${totalScore}</strong></td>
+                        <td>
+                            <span class="row-badge" style="display:inline-block; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:700; color:${band.colorHex}; background:${band.bgHex}; border:1px solid ${band.colorHex}30;">
+                                ${band.label}
+                            </span>
+                        </td>
+                        <td><input type="text" class="eval-comments" value="${existing?.comments || ''}" placeholder="ملاحظة للمعلم" style="padding:4px; font-size:12px; width:120px;"></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateTeacherRow(inputEl) {
+            const row = inputEl.closest("tr");
+            const exam = Math.min(50, Math.max(0, parseFloat(row.querySelector(".comp-exam").value) || 0));
+            const homework = Math.min(5, Math.max(0, parseFloat(row.querySelector(".comp-homework").value) || 0));
+            const part = Math.min(5, Math.max(0, parseFloat(row.querySelector(".comp-participation").value) || 0));
+            const behavior = Math.min(10, Math.max(0, parseFloat(row.querySelector(".comp-behavior").value) || 0));
+            const practical = Math.min(15, Math.max(0, parseFloat(row.querySelector(".comp-practical").value) || 0));
+            const oral = Math.min(15, Math.max(0, parseFloat(row.querySelector(".comp-oral").value) || 0));
+
+            const total = Math.min(100, exam + homework + part + behavior + practical + oral);
+            row.querySelector(".row-total").textContent = total.toFixed(1);
+
+            const band = window.EgyptianGrading ? EgyptianGrading.getColorBand(total) : { label: "-", colorHex: "#64748b", bgHex: "#f1f5f9" };
+            const badge = row.querySelector(".row-badge");
+            badge.textContent = band.label;
+            badge.style.color = band.colorHex;
+            badge.style.background = band.bgHex;
+            badge.style.border = `1px solid ${band.colorHex}30`;
+        }
+
+        function saveAllTeacherEvals() {
+            const classId = parseInt(document.getElementById("tEvalClass").value);
+            const monthId = parseInt(document.getElementById("tEvalMonth").value);
+            if (!classId) return;
+
+            const subjectId = (typeof matchSubjectByName === "function")
+                ? matchSubjectByName(teacherSubjectName)
+                : 1;
+
+            const rows = document.querySelectorAll("#teacherEvalsTableBody tr[data-student-id]");
+            let count = 0;
+
+            rows.forEach(row => {
+                const studentId = parseInt(row.getAttribute("data-student-id"));
+                const exam = Math.min(50, Math.max(0, parseFloat(row.querySelector(".comp-exam").value) || 0));
+                const homework = Math.min(5, Math.max(0, parseFloat(row.querySelector(".comp-homework").value) || 0));
+                const part = Math.min(5, Math.max(0, parseFloat(row.querySelector(".comp-participation").value) || 0));
+                const behavior = Math.min(10, Math.max(0, parseFloat(row.querySelector(".comp-behavior").value) || 0));
+                const practical = Math.min(15, Math.max(0, parseFloat(row.querySelector(".comp-practical").value) || 0));
+                const oral = Math.min(15, Math.max(0, parseFloat(row.querySelector(".comp-oral").value) || 0));
+                const total = Math.min(100, exam + homework + part + behavior + practical + oral);
+                const comments = row.querySelector(".eval-comments").value.trim();
+
+                addMonthlyEval({
+                    studentId: studentId,
+                    classId: classId,
+                    subjectId: subjectId,
+                    monthId: monthId,
+                    year: "2025-2026",
+                    score: total,
+                    components: { exam, homework, participation: part, behavior, practical, oral },
+                    comments: comments
+                });
+                count++;
+            });
+
+            showToast(`✅ تم حفظ تقييمات ${count} طالباً بنجاح`, "success");
+        }
+
+        function exportTeacherEvalsExcel() {
+            const classId = parseInt(document.getElementById("tEvalClass").value);
+            const className = getClassName(classId);
+            const monthSel = document.getElementById("tEvalMonth");
+            const monthName = monthSel.options[monthSel.selectedIndex].text;
+
+            const rows = document.querySelectorAll("#teacherEvalsTableBody tr[data-student-id]");
+            if (rows.length === 0) {
+                showToast("لا توجد بيانات للتصدير", "error");
+                return;
+            }
+
+            const data = [];
+            rows.forEach((r, i) => {
+                const name = r.cells[1].textContent.trim();
+                const exam = r.querySelector(".comp-exam").value;
+                const homework = r.querySelector(".comp-homework").value;
+                const part = r.querySelector(".comp-participation").value;
+                const behavior = r.querySelector(".comp-behavior").value;
+                const practical = r.querySelector(".comp-practical").value;
+                const oral = r.querySelector(".comp-oral").value;
+                const total = r.querySelector(".row-total").textContent;
+                const grade = r.querySelector(".row-badge").textContent.trim();
+                const notes = r.querySelector(".eval-comments").value;
+
+                data.push({
+                    "م": i + 1,
+                    "اسم الطالب": name,
+                    "الفصل": className,
+                    "الشهر": monthName,
+                    "المادة": teacherSubjectName,
+                    "امتحان (50)": exam,
+                    "واجب (5)": homework,
+                    "مشاركة (5)": part,
+                    "سلوك (10)": behavior,
+                    "عملي (15)": practical,
+                    "شفوي (15)": oral,
+                    "المجموع (100)": total,
+                    "التقدير": grade,
+                    "ملاحظات": notes
+                });
+            });
+
+            if (window.XLSX) {
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "التقييمات");
+                XLSX.writeFile(wb, `تقييمات_${className}_${monthName}_${teacherSubjectName}.xlsx`);
+                showToast("✅ تم تصدير ملف Excel بنجاح", "success");
+            } else {
+                exportToCSV(data, `تقييمات_${className}_${monthName}.csv`);
+            }
+        }
+
+        // ==========================================
+        // 2. TEACHING SCHEDULE LOGIC
+        // ==========================================
+        const DEFAULT_DAYS = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+
+        function getScheduleKey() {
+            const id = currentSession ? (currentSession.userId || currentSession.id || currentSession.email) : "default";
+            return "teacher_schedule_" + id;
+        }
+
+        function loadTeacherSchedule() {
+            const tbody = document.getElementById("teacherScheduleTableBody");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            const key = getScheduleKey();
+            let sched = JSON.parse(localStorage.getItem(key) || "null");
+
+            if (!sched || !Array.isArray(sched) || sched.length === 0) {
+                sched = buildDefaultSchedule();
+                localStorage.setItem(key, JSON.stringify(sched));
+            }
+
+            sched.forEach((row, dayIdx) => {
+                let cellsHtml = `<td><strong>${row.day}</strong></td>`;
+                row.periods.forEach((p, pIdx) => {
+                    const hasClass = p && p.className;
+                    const bg = hasClass ? "#f0fdf4" : "#ffffff";
+                    const border = hasClass ? "1px solid #bbf7d0" : "1px solid #e2e8f0";
+                    const color = hasClass ? "#16a34a" : "#94a3b8";
+
+                    cellsHtml += `
+                        <td onclick="editScheduleSlot(${dayIdx}, ${pIdx})" style="cursor:pointer; background:${bg}; border:${border}; text-align:center; padding:10px;">
+                            <strong style="color:${color}; font-size:14px; display:block;">${hasClass ? p.className : "فترة راحة"}</strong>
+                            <small style="color:#64748b;">${hasClass ? (p.subject || teacherSubjectName) : "—"}</small>
+                        </td>
+                    `;
+                });
+                tbody.innerHTML += `<tr>${cellsHtml}</tr>`;
+            });
+        }
+
+        function buildDefaultSchedule() {
+            const db = initDatabase();
+            const classesToUse = db.classes.filter(c => teacherAssignedClassIds.includes(c.id));
+            const cList = classesToUse.length > 0 ? classesToUse : db.classes;
+
+            return DEFAULT_DAYS.map((day, dIdx) => {
+                const periods = [];
+                for (let p = 1; p <= 6; p++) {
+                    // Distribute classes realistically
+                    if (p === 3 && dIdx % 2 === 0) {
+                        periods.push({ className: "", subject: "فسحة / راحة" });
+                    } else if (p === 6 && dIdx === 4) {
+                        periods.push({ className: "", subject: "احتياطي" });
+                    } else {
+                        const assignedC = cList[(dIdx + p) % cList.length];
+                        periods.push({
+                            className: assignedC ? assignedC.name : "فصل 1/1",
+                            subject: teacherSubjectName
+                        });
+                    }
+                }
+                return { day: day, periods: periods };
+            });
+        }
+
+        function editScheduleSlot(dayIdx, pIdx) {
+            const key = getScheduleKey();
+            const sched = JSON.parse(localStorage.getItem(key) || "[]");
+            if (!sched[dayIdx]) return;
+
+            const current = sched[dayIdx].periods[pIdx] || {};
+            const currentVal = current.className || "";
+
+            const newVal = prompt(`تعديل الحصة رقم ${pIdx + 1} يوم (${sched[dayIdx].day})\nأدخل اسم الفصل (أو اتركه فارغاً لفترة راحة):`, currentVal);
+            if (newVal === null) return;
+
+            const trimmed = newVal.trim();
+            sched[dayIdx].periods[pIdx] = {
+                className: trimmed,
+                subject: trimmed ? teacherSubjectName : "راحة"
+            };
+
+            localStorage.setItem(key, JSON.stringify(sched));
+            loadTeacherSchedule();
+            showToast("✅ تم تحديث جدول الحصص بنجاح", "success");
+        }
+
+        function resetTeacherScheduleToDefault() {
+            if (!confirm("هل ترغب بإعادة تعيين جدول الحصص إلى التوزيع الافتراضي؟")) return;
+            const key = getScheduleKey();
+            const fresh = buildDefaultSchedule();
+            localStorage.setItem(key, JSON.stringify(fresh));
+            loadTeacherSchedule();
+            showToast("✅ تم استعادة الجدول الافتراضي", "success");
+        }
+
+        // ==========================================
+        // 3. RESULTS & GRADES TAB LOGIC
+        // ==========================================
+        function loadTeacherResults() {
+            const classId = parseInt(document.getElementById("tResultClass").value);
+            const term = document.getElementById("tResultTerm").value;
+            if (!classId) return;
+
+            const students = getStudentsByClass(classId);
+            const table = document.getElementById("teacherResultsTableBody");
+            table.innerHTML = "";
+
+            if (students.length === 0) {
+                table.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:25px;color:#888;">لا يوجد طلاب في هذا الفصل</td></tr>`;
+                return;
+            }
+
+            const gid = getGradeIdByClass(classId);
+            const subs = getSubjects(gid);
+            const targetSubId = (typeof matchSubjectByName === "function") ? matchSubjectByName(teacherSubjectName) : 1;
+            let targetSub = subs.find(s => s.id === targetSubId) || subs.find(s => s.name.trim() === teacherSubjectName.trim()) || subs[0] || { id: targetSubId, name: teacherSubjectName, maxScore: 100 };
+
+            const rdb = initResultsDB();
+            const maxScore = targetSub.maxScore || 100;
+
+            students.forEach((st, idx) => {
+                const res = rdb.results.find(r =>
+                    r.studentId === st.id &&
+                    r.classId === classId &&
+                    r.subjectId === targetSub.id &&
+                    r.term === term
+                );
+
+                const score = res?.score ?? "";
+                const hasScore = score !== "" && !isNaN(score);
+                const pct = hasScore && maxScore > 0 ? ((parseFloat(score) / maxScore) * 100) : 0;
+                const band = hasScore && window.EgyptianGrading ? EgyptianGrading.getColorBand(pct) : { label: "-", colorHex: "#64748b", bgHex: "#f8fafc" };
+
+                table.innerHTML += `
+                    <tr data-student-id="${st.id}" data-max-score="${maxScore}">
+                        <td>${idx + 1}</td>
+                        <td style="font-weight:700; text-align:right;">${st.name}</td>
+                        <td style="font-family:monospace; color:#475569;">${st.nationalId}</td>
+                        <td>
+                            <input type="number" class="res-score-input" min="0" max="${maxScore}" step="0.5" value="${score}" placeholder="0 - ${maxScore}" oninput="updateResultRow(this)" style="width:90px; text-align:center; font-weight:bold; padding:6px; border:1px solid #cbd5e1; border-radius:6px;">
+                        </td>
+                        <td><strong>${maxScore}</strong></td>
+                        <td class="res-pct">${hasScore ? pct.toFixed(1) + '%' : '-'}</td>
+                        <td>
+                            <span class="res-badge" style="display:inline-block; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; color:${band.colorHex}; background:${band.bgHex}; border:1px solid ${band.colorHex}30;">
+                                ${band.label}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateResultRow(inputEl) {
+            const row = inputEl.closest("tr");
+            const maxScore = parseFloat(row.getAttribute("data-max-score")) || 100;
+            const val = inputEl.value.trim();
+
+            if (val === "" || isNaN(val)) {
+                row.querySelector(".res-pct").textContent = "-";
+                const badge = row.querySelector(".res-badge");
+                badge.textContent = "-";
+                badge.style.color = "#64748b";
+                badge.style.background = "#f8fafc";
+                return;
+            }
+
+            const score = Math.min(maxScore, Math.max(0, parseFloat(val)));
+            const pct = (score / maxScore) * 100;
+            row.querySelector(".res-pct").textContent = pct.toFixed(1) + "%";
+
+            const band = window.EgyptianGrading ? EgyptianGrading.getColorBand(pct) : { label: "-", colorHex: "#64748b", bgHex: "#f8fafc" };
+            const badge = row.querySelector(".res-badge");
+            badge.textContent = band.label;
+            badge.style.color = band.colorHex;
+            badge.style.background = band.bgHex;
+            badge.style.border = `1px solid ${band.colorHex}30`;
+        }
+
+        function saveAllTeacherResults() {
+            const classId = parseInt(document.getElementById("tResultClass").value);
+            const term = document.getElementById("tResultTerm").value;
+            if (!classId) return;
+
+            const gid = getGradeIdByClass(classId);
+            const subs = getSubjects(gid);
+            const targetSubId = (typeof matchSubjectByName === "function") ? matchSubjectByName(teacherSubjectName) : 1;
+            let targetSub = subs.find(s => s.id === targetSubId) || subs.find(s => s.name.trim() === teacherSubjectName.trim()) || subs[0] || { id: targetSubId, name: teacherSubjectName, maxScore: 100 };
+
+            const rows = document.querySelectorAll("#teacherResultsTableBody tr[data-student-id]");
+            let count = 0;
+
+            rows.forEach(row => {
+                const studentId = parseInt(row.getAttribute("data-student-id"));
+                const val = row.querySelector(".res-score-input").value.trim();
+                if (val !== "" && !isNaN(val)) {
+                    const score = parseFloat(val);
+                    addResult({
+                        studentId: studentId,
+                        classId: classId,
+                        subjectId: targetSub.id,
+                        term: term,
+                        year: "2025-2026",
+                        score: score
+                    });
+                    count++;
+                }
+            });
+
+            showToast(`✅ تم حفظ درجات ${count} طالباً بنجاح`, "success");
+        }
+
+        function exportTeacherResultsExcel() {
+            const classId = parseInt(document.getElementById("tResultClass").value);
+            const className = getClassName(classId);
+            const term = document.getElementById("tResultTerm").value;
+
+            const rows = document.querySelectorAll("#teacherResultsTableBody tr[data-student-id]");
+            if (rows.length === 0) {
+                showToast("لا توجد بيانات للتصدير", "error");
+                return;
+            }
+
+            const data = [];
+            rows.forEach((r, i) => {
+                const name = r.cells[1].textContent.trim();
+                const nid = r.cells[2].textContent.trim();
+                const score = r.querySelector(".res-score-input").value;
+                const max = r.getAttribute("data-max-score");
+                const pct = r.querySelector(".res-pct").textContent;
+                const grade = r.querySelector(".res-badge").textContent.trim();
+
+                data.push({
+                    "م": i + 1,
+                    "اسم الطالب": name,
+                    "كود الطالب": nid,
+                    "الفصل": className,
+                    "الترم": term,
+                    "المادة": teacherSubjectName,
+                    "الدرجة": score,
+                    "الدرجة العظمى": max,
+                    "النسبة": pct,
+                    "التقدير": grade
+                });
+            });
+
+            if (window.XLSX) {
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "الدرجات");
+                XLSX.writeFile(wb, `درجات_${className}_${term}_${teacherSubjectName}.xlsx`);
+                showToast("✅ تم تصدير ملف الدرجات بنجاح", "success");
+            } else {
+                exportToCSV(data, `درجات_${className}_${term}.csv`);
+            }
+        }
+
+        function handleTeacherResultsUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    let parsedData = [];
+                    if (window.XLSX && (file.name.endsWith(".xlsx") || file.name.endsWith(".xls"))) {
+                        const workbook = XLSX.read(e.target.result, { type: "binary" });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        parsedData = XLSX.utils.sheet_to_json(firstSheet);
+                    } else {
+                        // Simple CSV fallback
+                        const text = e.target.result;
+                        const lines = text.split("\n").filter(l => l.trim().length > 0);
+                        const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ''));
+                        for (let i = 1; i < lines.length; i++) {
+                            const parts = lines[i].split(",").map(p => p.trim().replace(/^"|"$/g, ''));
+                            const obj = {};
+                            headers.forEach((h, idx) => obj[h] = parts[idx]);
+                            parsedData.push(obj);
+                        }
+                    }
+
+                    if (parsedData.length === 0) {
+                        showToast("الملف فارغ أو غير متوافق", "error");
+                        return;
+                    }
+
+                    // Apply parsed scores to matching rows
+                    let matchedCount = 0;
+                    const rows = document.querySelectorAll("#teacherResultsTableBody tr[data-student-id]");
+                    rows.forEach(r => {
+                        const name = r.cells[1].textContent.trim();
+                        const nid = r.cells[2].textContent.trim();
+
+                        const match = parsedData.find(item => {
+                            const iNid = String(item["كود الطالب"] || item["nationalId"] || item["الرقم القومي"] || "").trim();
+                            const iName = String(item["اسم الطالب"] || item["name"] || "").trim();
+                            return (iNid && iNid === nid) || (iName && iName === name);
+                        });
+
+                        if (match) {
+                            const scoreVal = match["الدرجة"] ?? match["score"] ?? match["الدرجة المستحقة"];
+                            if (scoreVal !== undefined && !isNaN(scoreVal)) {
+                                const input = r.querySelector(".res-score-input");
+                                input.value = scoreVal;
+                                updateResultRow(input);
+                                matchedCount++;
+                            }
+                        }
+                    });
+
+                    showToast(`✅ تم استيراد وتطبيق درجات ${matchedCount} طالباً بنجاح! لا تنس النقر على حفظ الدرجات.`, "success");
+                } catch (err) {
+                    showToast("❌ خطأ أثناء معالجة ملف الدرجات: " + err.message, "error");
+                }
+            };
+
+            if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+                reader.readAsBinaryString(file);
+            } else {
+                reader.readAsText(file, "utf-8");
+            }
+            event.target.value = "";
+        }
+
+        // ==========================================
+        // 4. ASSIGNED CLASSES VIEW LOGIC
+        // ==========================================
+        function renderTeacherClassesGrid(db) {
+            const grid = document.getElementById("teacherClassesGrid");
+            if (!grid) return;
+            grid.innerHTML = "";
+
+            const classesToUse = db.classes.filter(c => teacherAssignedClassIds.includes(c.id));
+            const availableClasses = classesToUse.length > 0 ? classesToUse : db.classes;
+
+            const today = new Date().toISOString().split('T')[0];
+            const globalAtt = JSON.parse(localStorage.getItem("attendance_" + today) || "[]");
+
+            availableClasses.forEach(c => {
+                const students = getStudentsByClass(c.id);
+                const gradeName = getGradeIdByClass(c.id) ? `الصف ${getGradeIdByClass(c.id)} الابتدائي` : "";
+                const classAtt = JSON.parse(localStorage.getItem(`attendance_${today}_class_${c.id}`) || "[]");
+                const todayAttendance = classAtt.length > 0 ? classAtt : globalAtt;
+
+                let presentToday = 0;
+                students.forEach(st => {
+                    const match = todayAttendance.find(a => a.nationalId === st.nationalId && a.status === "حاضر");
+                    if (match) presentToday++;
+                });
+
+                const attPct = students.length > 0 ? ((presentToday / students.length) * 100).toFixed(0) : "0";
+
+                grid.innerHTML += `
+                    <div class="card" style="margin:0; text-align:right; border-top: 4px solid #16a34a; padding:18px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <h3 style="margin:0; color:#1e293b; font-size:18px;">🏫 ${c.name}</h3>
+                            <span style="font-size:12px; background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:12px; font-weight:700;">
+                                ${gradeName}
+                            </span>
+                        </div>
+                        <p style="margin:6px 0; color:#475569; font-size:13px;">👨‍🎓 عدد طلاب الفصل: <strong>${students.length} طالب</strong></p>
+                        <p style="margin:6px 0; color:#475569; font-size:13px;">📊 نسبة الحضور اليوم: <strong style="color:#16a34a;">${attPct}%</strong> (${presentToday} من ${students.length})</p>
+                        
+                        <div style="display:flex; flex-direction:column; gap:6px; margin-top:14px;">
+                            <button onclick="viewClassStudentsList(${c.id})" style="background:linear-gradient(135deg,#0284c7,#0369a1); font-size:13px; padding:8px 12px;">
+                                👥 عرض كشف طلاب الفصل
+                            </button>
+                            <button onclick="navigate('attendance.html')" style="background:linear-gradient(135deg,#16a34a,#22c55e); font-size:13px; padding:8px 12px;">
+                                📅 رصد حضور الفصل
+                            </button>
+                            <button onclick="openClassEvals(${c.id})" style="background:linear-gradient(135deg,#ec4899,#f43f5e); font-size:13px; padding:8px 12px;">
+                                📝 تقييم طلاب الفصل
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function viewClassStudentsList(classId) {
+            const db = initDatabase();
+            const cls = db.classes.find(c => c.id === classId);
+            const students = getStudentsByClass(classId);
+
+            const box = document.getElementById("selectedClassDetailsBox");
+            box.classList.remove("hidden");
+            document.getElementById("selectedClassTitle").textContent = `قائمة طلاب: ${cls ? cls.name : classId}`;
+            document.getElementById("selectedClassSubtitle").textContent = `إجمالي طلاب الفصل: ${students.length} طالب وطالبة`;
+
+            const tbody = document.getElementById("classStudentsTableBody");
+            tbody.innerHTML = students.map((st, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td style="font-weight:700; text-align:right;">${st.name}</td>
+                    <td style="font-family:monospace;">${st.nationalId}</td>
+                    <td>${st.gender || '-'}</td>
+                    <td>
+                        <button onclick="openBarcodeModal({ name: '${st.name.replace(/'/g, "\\'")}', nationalId: '${st.nationalId}' })" style="padding:4px 8px; font-size:12px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer;">
+                            🏷️ عرض الباركود
+                        </button>
+                    </td>
+                    <td>
+                        <button onclick="openClassEvals(${classId})" style="padding:4px 8px; font-size:12px; background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:6px; cursor:pointer;">
+                            📝 تقييم
+                        </button>
+                    </td>
+                </tr>
+            `).join("");
+
+            box.scrollIntoView({ behavior: "smooth" });
+        }
+
+        function openClassEvals(classId) {
+            switchTeacherTab('evals');
+            const sel = document.getElementById("tEvalClass");
+            if (sel) {
+                sel.value = classId;
+                loadTeacherEvals();
+            }
+        }
+
+        // ==========================================
+        // SHARED ACTIONS
+        // ==========================================
+        function navigate(url) {
+            window.location.href = url;
+        }
+
+        function logout() {
+            logoutUser();
+            window.location.href = "login.html";
+        }
+
+        function editTeacherSubject() {
+            const session = getCurrentSession();
+            if (!session) return;
+            const currentSub = session.subject || "";
+            const newSub = prompt("أدخل المادة التي تدرسها (مثال: لغة عربية / رياضيات / علوم / دراسات / إنجليزي):", currentSub);
+            if (newSub === null) return;
+            const trimmed = newSub.trim();
+            const targetId = session.userId || session.id;
+            if (typeof updateUserProfile === "function" && targetId) {
+                updateUserProfile(targetId, { subject: trimmed });
+            } else {
+                session.subject = trimmed;
+                localStorage.setItem("currentSession", JSON.stringify(session));
+            }
+            showToast("✅ تم حفظ المادة بنجاح", "success");
+            initTeacherDashboard();
+        }
+
+        function exportFullDatabase() {
+            initUsersDB();
+            initMonthlyEvalsDB();
+            const fullData = {
+                exportedAt: new Date().toISOString(),
+                version: "2.0",
+                attendanceDB: initDatabase(),
+                resultsDB: initResultsDB(),
+                usersDB: getUsersDB(),
+                monthlyEvalsDB: getMonthlyEvalsDB(),
+                currentSession: JSON.parse(localStorage.getItem("currentSession") || "null")
+            };
+            const attendanceRecords = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k.startsWith("attendance_")) {
+                    try { attendanceRecords[k] = JSON.parse(localStorage.getItem(k)); }
+                    catch (e) {}
+                }
+            }
+            fullData.attendanceRecords = attendanceRecords;
+
+            const blob = new Blob([JSON.stringify(fullData, null, 2)],
+                { type: "application/json;charset=utf-8;" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `نسخة_احتياطية_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showToast("✅ تم تصدير قاعدة البيانات بنجاح", "success");
+        }
+
+        function importFullDatabase(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!confirm("سيتم استبدال جميع البيانات الحالية بالملف المستورد، هل أنت متأكدة؟")) {
+                event.target.value = "";
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.attendanceDB) {
+                        localStorage.setItem(DB_KEY, JSON.stringify(data.attendanceDB));
+                    }
+                    if (data.resultsDB) {
+                        localStorage.setItem(RESULTS_KEY, JSON.stringify(data.resultsDB));
+                    }
+                    if (data.usersDB) {
+                        localStorage.setItem(USERS_KEY, JSON.stringify(data.usersDB));
+                    }
+                    if (data.monthlyEvalsDB) {
+                        localStorage.setItem(MONTHLY_EVALS_KEY, JSON.stringify(data.monthlyEvalsDB));
+                    }
+                    if (data.currentSession) {
+                        localStorage.setItem("currentSession", JSON.stringify(data.currentSession));
+                    }
+                    if (data.attendanceRecords) {
+                        Object.keys(data.attendanceRecords).forEach(k => {
+                            localStorage.setItem(k, JSON.stringify(data.attendanceRecords[k]));
+                        });
+                    }
+                    showToast("✅ تم استيراد قاعدة البيانات بنجاح", "success");
+                    setTimeout(() => location.reload(), 1200);
+                } catch (err) {
+                    showToast("❌ خطأ في قراءة الملف: " + err.message, "error");
+                }
+            };
+            reader.readAsText(file, "utf-8");
+            event.target.value = "";
+        }
+
+        document.addEventListener("DOMContentLoaded", initTeacherDashboard);
+    </script>
+
+</body>
+
+</html>

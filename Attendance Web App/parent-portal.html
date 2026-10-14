@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة أولياء الأمور - مدرسة السادات الابتدائية</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+</head>
+
+<body>
+
+    <header class="attendance-header">
+        <h1>👨‍👩‍👧 بوابة أولياء الأمور</h1>
+        <p>مدرسة السادات الابتدائية بميت غمر - متابعة حضور وتقييمات ودرجات الطلاب</p>
+    </header>
+
+    <main class="attendance-container">
+
+        <!-- Child Search / Switcher Bar -->
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px 20px; margin-bottom: 22px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:20px;">🔎</span>
+                <div>
+                    <strong style="color:#1e293b; font-size:15px;">البحث عن طالب / متابعة ابن آخر:</strong>
+                    <p style="margin:2px 0 0; color:#64748b; font-size:12px;">أدخل كود الطالب (9 أرقام) أو اسم الطالب بالكامل</p>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <input type="text" id="parentSearchInput" placeholder="كود الطالب أو الاسم..." style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; width:220px;">
+                <button onclick="handleParentSearch()" style="background:linear-gradient(135deg,#f59e0b,#d97706); color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:700; font-size:13px;">
+                    بحث وعرض
+                </button>
+            </div>
+        </div>
+
+        <!-- Student Profile Card -->
+        <div id="parentStudentInfo" class="student-info-card">
+            <div class="student-avatar" id="parentAvatar" style="background: linear-gradient(135deg,#f59e0b,#ea580c);">👤</div>
+            <div class="student-details">
+                <h2 id="parentStudentName">جاري تحميل بيانات الطالب...</h2>
+                <p>🆔 <strong>كود الطالب / id:</strong> <span id="parentStudentNid" style="font-family:monospace; font-weight:bold; color:#4338ca;">-</span></p>
+                <p>🏫 <strong>الفصل الدراسي المسند:</strong> <span id="parentStudentClass" style="color:#2563eb; font-weight:bold;">-</span> <span id="parentGradeBadge" style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:bold; margin-right:6px;">-</span></p>
+                <p>🚻 <strong>النوع:</strong> <span id="parentStudentGender">-</span></p>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button class="barcode-btn" onclick="showParentBarcodeModal()" style="width:100%;">🏷️ طباعة بطاقة الطالب</button>
+                <button class="logout-btn" onclick="logoutParent()">🚪 تسجيل الخروج</button>
+            </div>
+        </div>
+
+        <!-- Today's Attendance Alert Box -->
+        <div id="todayAttendanceBox" style="margin-bottom: 22px; padding:15px 20px; border-radius:12px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div id="todayStatusIcon" style="font-size:28px;">📅</div>
+                <div>
+                    <h3 id="todayStatusTitle" style="margin:0; font-size:16px; color:#1e293b;">حالة الحضور اليوم بالمدرسة</h3>
+                    <p id="todayStatusDesc" style="margin:4px 0 0; color:#64748b; font-size:13px;">جاري فحص سجل اليوم...</p>
+                </div>
+            </div>
+            <div id="todayStatusBadge" style="padding:6px 14px; border-radius:20px; font-weight:bold; font-size:13px; background:#f1f5f9; color:#475569;">
+                -
+            </div>
+        </div>
+
+        <!-- Inline Barcode Card for Parent -->
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px; margin-bottom: 22px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div>
+                <h3 style="margin:0 0 4px; color:#1e293b; font-size:16px;">🏷️ باركود الطالب المدرسي المعتمد (Student Barcode)</h3>
+                <p style="margin:0; color:#64748b; font-size:13px;">يمكنك الاحتفاظ بهذا الرمز على هاتفك واستخدامه للحضور السريع أو طباعته كبطاقة مدرسية</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <canvas id="parentDirectBarcode" width="220" height="75" style="border:1px dashed #cbd5e1; border-radius:8px; padding:4px; background:#fff;"></canvas>
+                <button class="print-btn" onclick="printCurrentBarcode()" style="font-size:13px; padding:8px 14px;">🖨️ طباعة الرمز</button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-menu" style="margin-bottom: 20px;">
+            <button id="tabParentResults" class="active" onclick="switchParentTab('results')">🎓 درجات المواد والشهادة</button>
+            <button id="tabParentMonthly" onclick="switchParentTab('monthly')">📅 التقييمات الشهرية (6 عناصر)</button>
+            <button id="tabParentAttendance" onclick="switchParentTab('attendance')">📅 سجل الحضور والغياب</button>
+            <button id="tabParentContact" onclick="switchParentTab('contact')">🏫 تواصل وملاحظات المدرسة</button>
+        </div>
+
+        <!-- 1. RESULTS TAB -->
+        <div id="parentResultsSection">
+            <div class="top-bar">
+                <div>
+                    <label for="pTerm">📝 الفصل الدراسي</label>
+                    <select id="pTerm" class="term-select" onchange="loadParentResults()">
+                        <option value="الفصل الأول">الفصل الأول</option>
+                        <option value="الفصل الثاني">الفصل الثاني</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="results-summary">
+                <div class="summary-item">
+                    <label>المجموع الكلي</label>
+                    <div class="value" id="pTotal">0</div>
+                </div>
+                <div class="summary-item">
+                    <label>النسبة المئوية</label>
+                    <div class="value" id="pPct">0%</div>
+                </div>
+                <div class="summary-item">
+                    <label>المستوى والتقدير</label>
+                    <div class="value" id="pGrade" style="color:#4f46e5;">-</div>
+                </div>
+                <div class="summary-item">
+                    <label>ترتيب الطالب بالفصل</label>
+                    <div class="value" id="pRank" style="color:#f59e0b;">-</div>
+                </div>
+            </div>
+
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="print-btn" onclick="printSection('parentResultsTableContainer', 'إشعار درجات الطالب لولي الأمر')">
+                    🖨️ طباعة إشعار الدرجات
+                </button>
+            </div>
+
+            <div id="parentResultsTableContainer" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>📖 المادة الدراسية</th>
+                            <th>🏆 درجة الطالب</th>
+                            <th>📊 النهاية العظمى</th>
+                            <th>📈 النسبة</th>
+                            <th>🏅 التقدير اللوني (الوزارة)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="parentResultsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 2. MONTHLY EVALUATIONS TAB -->
+        <div id="parentMonthlySection" class="hidden">
+            <div class="top-bar">
+                <div>
+                    <label for="pMonth">📅 الشهر الدراسي</label>
+                    <select id="pMonth" onchange="loadParentMonthlyEvals()">
+                    </select>
+                </div>
+                <div class="action-buttons">
+                    <button class="print-btn" onclick="printSection('parentMonthlyTableContainer', 'كشف التقييمات الشهرية للطالب')">
+                        🖨️ طباعة كشف التقييمات
+                    </button>
+                </div>
+            </div>
+
+            <div class="input-hint" style="margin-bottom:12px;">
+                💡 نظام التقييم الابتدائي المصري: امتحان الشهر (50) + واجب (5) + مشاركة (5) + سلوك (10) + عملي (15) + شفوي (15) = 100 درجة.
+            </div>
+
+            <div id="parentMonthlyTableContainer" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>📖 اسم المادة</th>
+                            <th title="امتحان الشهر (50)">امتحان (50)</th>
+                            <th title="كشكول الواجب (5)">واجب (5)</th>
+                            <th title="المشاركة والتفاعل (5)">مشاركة (5)</th>
+                            <th title="السلوك والمواظبة (10)">سلوك (10)</th>
+                            <th title="التقييم العملي (15)">عملي (15)</th>
+                            <th title="التقييم الشفوي (15)">شفوي (15)</th>
+                            <th>المجموع (100)</th>
+                            <th>التقدير اللوني</th>
+                            <th>ملاحظات المعلم</th>
+                        </tr>
+                    </thead>
+                    <tbody id="parentMonthlyTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. ATTENDANCE TAB -->
+        <div id="parentAttendanceSection" class="hidden">
+            <div class="results-summary">
+                <div class="summary-item">
+                    <label>أيام الحضور الفعلي</label>
+                    <div class="value" style="color:#16a34a;" id="pPresent">0</div>
+                </div>
+                <div class="summary-item">
+                    <label>أيام الغياب</label>
+                    <div class="value" style="color:#dc2626;" id="pAbsent">0</div>
+                </div>
+                <div class="summary-item">
+                    <label>نسبة الحضور التراكمية</label>
+                    <div class="value" id="pAttPct">0%</div>
+                </div>
+            </div>
+
+            <div class="action-buttons" style="margin-bottom:15px;">
+                <button class="print-btn" onclick="printSection('parentAttendanceTableContainer', 'سجل حضور وغياب الطالب')">
+                    🖨️ طباعة سجل الحضور
+                </button>
+            </div>
+
+            <div id="parentAttendanceTableContainer" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>📅 التاريخ</th>
+                            <th>🏫 الفصل</th>
+                            <th>✅ الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="parentAttendanceTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. CONTACT & NOTICES TAB -->
+        <div id="parentContactSection" class="hidden">
+            <div class="report-box" style="margin-top:0;">
+                <h2 style="color:#1e293b;">🏫 إدارة مدرسة السادات الابتدائية بميت غمر</h2>
+                <p style="color:#64748b; font-size:14px; margin-bottom:20px;">
+                    يسر إدارة المدرسة فتح قنوات التواصل المباشر مع أولياء الأمور الكرام لمتابعة المستوى الأكاديمي والسلوكي لأبنائنا وبناتنا الطلاب.
+                </p>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:15px;">
+                    <div style="background:#f8fafc; padding:16px; border-radius:10px; border-right:4px solid #16a34a;">
+                        <h4 style="margin:0 0 6px; color:#1e293b;">📞 أرقام الاتصال بالمدرسة</h4>
+                        <p style="margin:0; color:#475569; font-size:13px;">إدارة المدرسة: 050-6900000</p>
+                        <p style="margin:4px 0 0; color:#475569; font-size:13px;">مكتب شؤون الطلاب: 050-6911111</p>
+                    </div>
+
+                    <div style="background:#f8fafc; padding:16px; border-radius:10px; border-right:4px solid #2563eb;">
+                        <h4 style="margin:0 0 6px; color:#1e293b;">🕒 مواعيد مقابلة أولياء الأمور</h4>
+                        <p style="margin:0; color:#475569; font-size:13px;">أيام: الأحد والثلاثاء والخميس</p>
+                        <p style="margin:4px 0 0; color:#475569; font-size:13px;">من الساعة 12:00 ظهراً إلى 1:30 بعد الظهر</p>
+                    </div>
+
+                    <div style="background:#f8fafc; padding:16px; border-radius:10px; border-right:4px solid #f59e0b;">
+                        <h4 style="margin:0 0 6px; color:#1e293b;">📍 عنوان المدرسة</h4>
+                        <p style="margin:0; color:#475569; font-size:13px;">محافظة الدقهلية - مدينة ميت غمر</p>
+                        <p style="margin:4px 0 0; color:#475569; font-size:13px;">إدارة ميت غمر التعليمية - قطاع التعليم الابتدائي</p>
+                    </div>
+                </div>
+
+                <div style="margin-top:25px; padding:16px; background:#eff6ff; border-radius:10px; border:1px solid #bfdbfe;">
+                    <h4 style="margin:0 0 8px; color:#1e40af;">💡 نصائح تربوية لمتابعة الطالب بالمنزل:</h4>
+                    <ul style="margin:0; padding-right:20px; color:#1e3a8a; font-size:13px; line-height:1.7;">
+                        <li>متابعة كشكول الواجبات المدرسية يومياً والتأكد من إنجاز المهام المطلوبة.</li>
+                        <li>تشجيع الطالب على المشاركة والتفاعل الإيجابي مع معلمي الفصل.</li>
+                        <li>الحرص على النوم المبكر والحضور للمدرسة قبل طابور الصباح (الساعة 7:45 صباحاً).</li>
+                        <li>الاطلاع الدوري على التقييمات الشهرية ومتابعة تقارير درجات المواد عبر هذه البوابة.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="app-footer" style="text-align:center; padding:18px 12px; margin-top:35px; background:#f8fafc; border-top:1px solid #e2e8f0; color:#64748b; font-size:13px; line-height:1.6;">
+        <div style="max-width:900px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div>
+                🏫 <strong>مدرسة السادات الابتدائية بميت غمر</strong> - نظام الإدارة المدرسية والرصد الذكي
+            </div>
+            <div style="font-size:12px; color:#475569;">
+                تم التصميم والبرمجة والتطوير وحقوق الملكية الكاملة بواسطة: <strong style="color:#4f46e5; font-size:13px;">أماني محمد السيد</strong> (Amany Mohamed El-Sayed) © 2025 - 2026
+            </div>
+        </div>
+    </footer>
+
+    <script src="core/security.js"></script>
+    <script src="core/egyptian-grading.js"></script>
+    <script src="database.js"></script>
+    <script src="utils.js"></script>
+    <script>
+        let currentStudent = null;
+
+        function initParentPortal() {
+            const db = initDatabase();
+            const session = getCurrentSession();
+
+            // Populate months dropdown
+            const monthSel = document.getElementById("pMonth");
+            if (monthSel) {
+                monthSel.innerHTML = "";
+                getMonthsList().forEach(m => {
+                    const o = document.createElement("option");
+                    o.value = m.id;
+                    o.textContent = m.name;
+                    monthSel.appendChild(o);
+                });
+            }
+
+            // Determine which student to load
+            let targetStudent = null;
+            if (session) {
+                if (session.studentId) {
+                    targetStudent = db.students.find(s => s.id === session.studentId || s.nationalId === session.nationalId);
+                } else if (session.nationalId) {
+                    targetStudent = db.students.find(s => s.nationalId === session.nationalId);
+                }
+            }
+
+            // Fallback to first student if not set or demoing
+            if (!targetStudent && db.students.length > 0) {
+                targetStudent = db.students[0];
+            }
+
+            if (targetStudent) {
+                displayStudent(targetStudent);
+            }
+        }
+
+        function displayStudent(student) {
+            currentStudent = student;
+            const db = initDatabase();
+
+            document.getElementById("parentStudentName").textContent = student.name;
+            document.getElementById("parentStudentNid").textContent = student.nationalId;
+            document.getElementById("parentStudentGender").textContent = student.gender || "-";
+            document.getElementById("parentStudentClass").textContent = getClassName(student.classId);
+
+            const gid = getGradeIdByClass(student.classId);
+            const badge = document.getElementById("parentGradeBadge");
+            if (badge) badge.textContent = gid ? `الصف ${gid} الابتدائي` : "";
+            document.getElementById("parentAvatar").textContent = student.name.charAt(0);
+
+            // Generate direct barcode
+            setTimeout(() => {
+                generateBarcode(student.nationalId, student.name, "parentDirectBarcode");
+            }, 80);
+
+            // Check today's attendance status
+            checkTodayAttendance(student);
+
+            // Load data
+            loadParentResults(gid);
+            loadParentMonthlyEvals(gid, true);
+            loadParentAttendance();
+        }
+
+        function handleParentSearch() {
+            const query = document.getElementById("parentSearchInput").value.trim();
+            if (!query) {
+                showToast("يرجى إدخال اسم الطالب أو كود الطالب للبحث", "warning");
+                return;
+            }
+
+            const db = initDatabase();
+            const match = db.students.find(s =>
+                String(s.nationalId).trim() === query ||
+                s.name.trim().toLowerCase().includes(query.toLowerCase())
+            );
+
+            if (!match) {
+                showToast("لم يتم العثور على طالب يطابق البحث", "error");
+                return;
+            }
+
+            displayStudent(match);
+            showToast(`✅ تم عرض بيانات الطالب: ${match.name}`, "success");
+        }
+
+        function checkTodayAttendance(student) {
+            const today = new Date().toISOString().split('T')[0];
+            let match = null;
+
+            // 1. Check class attendance key
+            if (student.classId) {
+                try {
+                    const cRecs = JSON.parse(localStorage.getItem(`attendance_${today}_class_${student.classId}`) || "[]");
+                    match = cRecs.find(r => r.nationalId === student.nationalId);
+                } catch(e) {}
+            }
+
+            // 2. Check global date attendance key
+            if (!match) {
+                try {
+                    const gRecs = JSON.parse(localStorage.getItem("attendance_" + today) || "[]");
+                    match = gRecs.find(r => r.nationalId === student.nationalId);
+                } catch(e) {}
+            }
+
+            // 3. Scan all keys for today's date if still not found
+            if (!match) {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith(`attendance_${today}`)) {
+                        try {
+                            const data = JSON.parse(localStorage.getItem(key) || "[]");
+                            if (Array.isArray(data)) {
+                                const found = data.find(r => r.nationalId === student.nationalId);
+                                if (found) { match = found; break; }
+                            }
+                        } catch(e) {}
+                    }
+                }
+            }
+
+            const iconEl = document.getElementById("todayStatusIcon");
+            const titleEl = document.getElementById("todayStatusTitle");
+            const descEl = document.getElementById("todayStatusDesc");
+            const badgeEl = document.getElementById("todayStatusBadge");
+
+            if (match) {
+                if (match.status === "حاضر") {
+                    iconEl.textContent = "✅";
+                    titleEl.textContent = "الطالب حاضر اليوم بالمدرسة";
+                    descEl.textContent = `تم تسجيل حضور الطالب بنجاح اليوم (${today}) في تمام ${match.time || 'صباحاً'}`;
+                    badgeEl.textContent = "حاضر بالمدرسة ✅";
+                    badgeEl.style.background = "#dcfce7";
+                    badgeEl.style.color = "#15803d";
+                } else if (match.status === "غائب") {
+                    iconEl.textContent = "❌";
+                    titleEl.textContent = "الطالب مسجل غائب اليوم";
+                    descEl.textContent = `تم رصد غياب الطالب لتاريخ اليوم (${today}). يرجى التواصل مع إدارة المدرسة إذا كان الغياب بعذر.`;
+                    badgeEl.textContent = "غائب ❌";
+                    badgeEl.style.background = "#fee2e2";
+                    badgeEl.style.color = "#b91c1c";
+                } else {
+                    iconEl.textContent = "⚠️";
+                    titleEl.textContent = `حالة الحضور: ${match.status}`;
+                    descEl.textContent = `حالة الحضور المسجلة: ${match.status} (${today})`;
+                    badgeEl.textContent = match.status;
+                    badgeEl.style.background = "#fef3c7";
+                    badgeEl.style.color = "#b45309";
+                }
+            } else {
+                iconEl.textContent = "⏳";
+                titleEl.textContent = "لم يتم رصد الحضور بعد لهذا اليوم";
+                descEl.textContent = `تاريخ اليوم: ${today} - يتم تحديث الحضور فور مسح باركود الطالب في طابور الصباح`;
+                badgeEl.textContent = "قيد التسجيل ⏳";
+                badgeEl.style.background = "#f1f5f9";
+                badgeEl.style.color = "#475569";
+            }
+        }
+
+        function loadParentResults(gradeId) {
+            const table = document.getElementById("parentResultsTable");
+            table.innerHTML = "";
+            const term = document.getElementById("pTerm").value;
+            const gid = gradeId || getGradeIdByClass(currentStudent.classId);
+            const subs = getSubjects(gid);
+            const myResults = getResultsByStudent(currentStudent.id).filter(r => r.term === term);
+            const maxTotal = subs.reduce((s, sub) => s + sub.maxScore, 0);
+
+            let total = 0, hasAny = false;
+            subs.forEach((s, i) => {
+                const res = myResults.find(r => r.subjectId === s.id);
+                const score = res?.score ?? 0;
+                const hasScore = res?.score !== undefined;
+                if (hasScore) { total += score; hasAny = true; }
+
+                const calc = window.EgyptianGrading
+                    ? EgyptianGrading.calculateSubjectResult(s.maxScore, hasScore ? score : 0)
+                    : { percentage: (score/s.maxScore)*100, colorBand: { label: "-", colorHex: "#64748b", bgHex: "#f8fafc" } };
+
+                const band = calc.colorBand;
+                const pct = s.maxScore > 0 ? ((hasScore ? score : 0) / s.maxScore) * 100 : 0;
+
+                table.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${s.name}</strong></td>
+                        <td><strong>${hasScore ? score : '-'}</strong></td>
+                        <td>${s.maxScore}</td>
+                        <td>${hasScore ? pct.toFixed(1) + '%' : '-'}</td>
+                        <td>
+                            <span style="display:inline-block; padding:4px 10px; border-radius:8px; font-weight:700; font-size:13px; color:${band.colorHex}; background:${band.bgHex}; border:1px solid ${band.colorHex}40;">
+                                ${hasScore ? band.label : '-'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            const pctTotal = maxTotal > 0 ? ((hasAny ? total : 0) / maxTotal) * 100 : 0;
+            const overallBand = window.EgyptianGrading ? EgyptianGrading.getColorBand(pctTotal) : { label: "-", colorHex: "#4338ca" };
+
+            document.getElementById("pTotal").textContent = hasAny ? total.toFixed(1) + " / " + maxTotal : "0 / " + maxTotal;
+            document.getElementById("pPct").textContent = (hasAny ? pctTotal.toFixed(1) : "0") + "%";
+            document.getElementById("pGrade").textContent = hasAny ? overallBand.label : "-";
+            document.getElementById("pGrade").style.color = overallBand.colorHex;
+
+            const classmates = getStudentsByClass(currentStudent.classId);
+            const classScores = classmates.map(st => {
+                const res = getResultsByStudent(st.id).filter(r => r.term === term);
+                let t = 0, any = false;
+                subs.forEach(s => {
+                    const r = res.find(x => x.subjectId === s.id);
+                    if (r?.score !== undefined && !isNaN(r.score)) { t += r.score; any = true; }
+                });
+                return { id: st.id, total: any ? t : -1 };
+            }).filter(x => x.total >= 0).sort((a, b) => b.total - a.total);
+            const myIdx = classScores.findIndex(x => x.id === currentStudent.id);
+            document.getElementById("pRank").textContent = myIdx >= 0 ? `#${myIdx + 1} من ${classScores.length}` : "-";
+        }
+
+        function loadParentMonthlyEvals(gradeId, autoSelectLatest = false) {
+            const table = document.getElementById("parentMonthlyTable");
+            if (!table) return;
+            table.innerHTML = "";
+            const monthSel = document.getElementById("pMonth");
+            const gid = gradeId || getGradeIdByClass(currentStudent.classId);
+            const subs = getSubjects(gid);
+            const allStudentEvals = getMonthlyEvalsByStudent(currentStudent.id);
+
+            let monthId = monthSel ? parseInt(monthSel.value) : 9;
+            if (allStudentEvals.length > 0) {
+                const hasInCurrent = allStudentEvals.some(r => r.monthId === monthId);
+                if (!hasInCurrent && autoSelectLatest) {
+                    const latestMonthId = allStudentEvals[allStudentEvals.length - 1].monthId;
+                    if (latestMonthId && monthSel) {
+                        monthSel.value = latestMonthId;
+                        monthId = latestMonthId;
+                    }
+                }
+            }
+
+            const myEvals = allStudentEvals.filter(r => r.monthId === monthId);
+
+            let any = false;
+            subs.forEach((s, i) => {
+                const res = myEvals.find(r => r.subjectId === s.id);
+                const comp = res?.components || null;
+                const score = res?.score;
+                const hasScore = score !== undefined && !isNaN(score);
+                if (hasScore) any = true;
+
+                const band = hasScore && window.EgyptianGrading
+                    ? EgyptianGrading.getColorBand(score)
+                    : { label: "-", colorHex: "#64748b", bgHex: "#f8fafc" };
+
+                table.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${s.name}</strong></td>
+                        <td>${comp ? comp.exam : (hasScore ? score : '-')}</td>
+                        <td>${comp ? comp.homework : '-'}</td>
+                        <td>${comp ? comp.participation : '-'}</td>
+                        <td>${comp ? comp.behavior : '-'}</td>
+                        <td>${comp ? comp.practical : '-'}</td>
+                        <td>${comp ? comp.oral : '-'}</td>
+                        <td><strong style="font-size:15px; color:#1e293b;">${hasScore ? score : '-'} / 100</strong></td>
+                        <td>
+                            <span style="display:inline-block; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:700; color:${band.colorHex}; background:${band.bgHex}; border:1px solid ${band.colorHex}30;">
+                                ${hasScore ? band.label : '-'}
+                            </span>
+                        </td>
+                        <td style="color:#64748b; font-size:12px;">${res?.comments || 'لا توجد ملاحظات'}</td>
+                    </tr>
+                `;
+            });
+            if (!any) {
+                table.innerHTML += `<tr><td colspan="11" style="text-align:center;padding:25px;color:#888;">لا توجد تقييمات شهرية مسجلة لهذا الشهر</td></tr>`;
+            }
+        }
+
+        function loadParentAttendance() {
+            const table = document.getElementById("parentAttendanceTable");
+            table.innerHTML = "";
+            const records = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key.startsWith("attendance_")) continue;
+                const data = JSON.parse(localStorage.getItem(key));
+                const match = data.find(r => r.nationalId === currentStudent.nationalId);
+                if (match) {
+                    const datePart = key.split("_")[1];
+                    records.push({
+                        date: datePart,
+                        status: match.status,
+                        className: getClassName(match.classId || currentStudent.classId)
+                    });
+                }
+            }
+            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            let present = 0, absent = 0;
+            records.forEach(r => {
+                if (r.status === "حاضر") present++;
+                if (r.status === "غائب") absent++;
+            });
+            const total = present + absent;
+            document.getElementById("pPresent").textContent = present;
+            document.getElementById("pAbsent").textContent = absent;
+            document.getElementById("pAttPct").textContent = total > 0 ? ((present / total) * 100).toFixed(1) + "%" : "0%";
+
+            if (records.length === 0) {
+                table.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:#888;">لا توجد سجلات حضور مسجلة</td></tr>`;
+                return;
+            }
+
+            records.forEach((r, i) => {
+                const cls = r.status === "حاضر" ? "report-present" : r.status === "غائب" ? "report-absent" : "";
+                table.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${r.date}</td>
+                        <td>${r.className}</td>
+                        <td class="${cls}"><strong>${r.status}</strong></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function switchParentTab(tab) {
+            ["parentResultsSection", "parentMonthlySection", "parentAttendanceSection", "parentContactSection"].forEach(s =>
+                document.getElementById(s).classList.toggle("hidden", !s.includes(tab))
+            );
+            ["tabParentResults", "tabParentMonthly", "tabParentAttendance", "tabParentContact"].forEach((t, i) => {
+                const tabs = ["results", "monthly", "attendance", "contact"];
+                document.getElementById(t).classList.toggle("active", tabs[i] === tab);
+            });
+        }
+
+        function showParentBarcodeModal() {
+            if (currentStudent) openBarcodeModal(currentStudent);
+        }
+
+        function logoutParent() {
+            logoutUser();
+            window.location.href = "login.html";
+        }
+
+        function syncParentData() {
+            if (!currentStudent) return;
+            const gid = getGradeIdByClass(currentStudent.classId);
+            checkTodayAttendance(currentStudent);
+            loadParentResults(gid);
+            loadParentMonthlyEvals(gid);
+            loadParentAttendance();
+        }
+
+        // Real-time synchronization when attendance or evaluations change in another window/tab
+        window.addEventListener("storage", syncParentData);
+        window.addEventListener("focus", syncParentData);
+
+        document.addEventListener("DOMContentLoaded", initParentPortal);
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رصد الحضور والغياب</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+
+    <header class="attendance-header">
+        <div class="back-home">
+            <button onclick="window.location.href='index.html'">
+                🏠 العودة للرئيسية
+            </button>
+        </div>
+        <h1>📋 رصد الحضور والغياب</h1>
+        <p>تسجيل حضور وغياب الطلاب بسهولة وسرعة</p>
+    </header>
+
+    <main class="attendance-container">
+
+        <div class="scanner-box" style="text-align: center; background:#ffffff; padding:18px; border-radius:14px; box-shadow:var(--shadow); margin-bottom:20px; border:1px solid #e2e8f0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                <h3 style="margin:0; color:#1e293b;">🏷️ رصد الحضور بالباركود (قارئ USB / بلوتوث / كاميرا)</h3>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" id="btnToggleCam" onclick="toggleCameraScanner()" class="barcode-btn" style="background:#4f46e5; font-size:13px;">📷 تشغيل الكاميرا</button>
+                    <button type="button" id="btnLockSession" onclick="toggleLockSession()" class="export-btn" style="background:#64748b; font-size:13px;">🔒 اعتماد وقفل الجلسة</button>
+                </div>
+            </div>
+
+            <!-- Fast Input for USB/Bluetooth handheld scanners -->
+            <div style="display:flex; gap:10px; max-width:550px; margin:0 auto 10px;">
+                <input type="text" id="hwBarcodeInput" placeholder="جاهز لمسح الباركود بجهاز القارئ أو كتابة الكود ثم Enter..." autofocus
+                    style="flex:1; padding:12px; font-size:15px; border:2px solid #4f46e5; border-radius:8px; text-align:center; font-family:monospace;"
+                    onkeydown="handleManualScannerKey(event)">
+                <button type="button" class="save-btn" onclick="submitManualScan()" style="padding:10px 16px;">تسجيل</button>
+            </div>
+
+            <div id="sessionStatusBadge" style="display:inline-block; margin-bottom:8px; font-size:13px; padding:4px 12px; border-radius:20px; background:#f0fdf4; color:#16a34a; font-weight:bold;">
+                🟢 الجلسة مفتوحة للرصد
+            </div>
+
+            <div id="reader" style="max-width: 320px; margin: 12px auto; display:none;"></div>
+            <div id="scan-result" style="font-weight:bold; font-size:16px; min-height:28px; padding:6px; border-radius:8px;"></div>
+        </div>
+
+        <div class="top-bar">
+            <div>
+                <label for="gradeSelect">📚 الصف الدراسي</label>
+                <select id="gradeSelect" onchange="populateAttendanceClasses()">
+                    <option value="">اختر الصف</option>
+                </select>
+            </div>
+            <div>
+                <label for="classSelect">🏫 الفصل</label>
+                <select id="classSelect" onchange="displayAttendanceStudents()">
+                    <option value="">اختر الفصل</option>
+                </select>
+            </div>
+            <div>
+                <label for="date">📅 تاريخ الرصد</label>
+                <input type="date" id="date">
+            </div>
+            <div class="search-box">
+                <label for="search">🔎 بحث عن طالب</label>
+                <input type="text" id="search" placeholder="الاسم أو كود الطالب...">
+            </div>
+        </div>
+
+        <div class="stats" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+            <div class="stat-card">
+                <span>👥</span>
+                <div>
+                    <strong id="totalCount">0</strong>
+                    <small>إجمالي الطلاب</small>
+                </div>
+            </div>
+            <div class="stat-card present-stat">
+                <span>🟢</span>
+                <div>
+                    <strong id="presentCount">0</strong>
+                    <small>حاضر</small>
+                </div>
+            </div>
+            <div class="stat-card" style="border-right: 4px solid #f59e0b;">
+                <span>⏳</span>
+                <div>
+                    <strong id="lateCount" style="color:#d97706;">0</strong>
+                    <small>متأخر</small>
+                </div>
+            </div>
+            <div class="stat-card" style="border-right: 4px solid #2563eb;">
+                <span>📝</span>
+                <div>
+                    <strong id="excusedCount" style="color:#2563eb;">0</strong>
+                    <small>عذر مقبول</small>
+                </div>
+            </div>
+            <div class="stat-card absent-stat">
+                <span>🔴</span>
+                <div>
+                    <strong id="absentCount">0</strong>
+                    <small>غائب</small>
+                </div>
+            </div>
+            <div class="stat-card pending-stat">
+                <span>📋</span>
+                <div>
+                    <strong id="pendingCount">0</strong>
+                    <small>لم يتم التسجيل</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="save-section">
+            <button class="save-btn" onclick="saveAttendance()">
+                💾 حفظ رصد اليوم
+            </button>
+            <div class="action-buttons" style="margin-top: 10px;">
+                <button class="print-btn" onclick="printAttendance()">🖨️ طباعة سجل اليوم</button>
+                <button class="export-btn" onclick="exportAttendanceExcel()">📥 تصدير Excel</button>
+                <button class="barcode-btn" onclick="printCurrentClassBarcodes()">🏷️ طباعة باركودات الفصل</button>
+            </div>
+        </div>
+
+        <div id="attendanceSection" class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>م</th>
+                        <th>🆔 كود الطالب</th>
+                        <th>👤 اسم الطالب</th>
+                        <th>الحالة</th>
+                        <th>⚙️ تسجيل الحالة والباركود</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsTable">
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <footer class="app-footer" style="text-align:center; padding:18px 12px; margin-top:35px; background:#f8fafc; border-top:1px solid #e2e8f0; color:#64748b; font-size:13px; line-height:1.6;">
+        <div style="max-width:900px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div>
+                🏫 <strong>مدرسة السادات الابتدائية بميت غمر</strong> - نظام الإدارة المدرسية والرصد الذكي
+            </div>
+            <div style="font-size:12px; color:#475569;">
+                تم التصميم والبرمجة والتطوير وحقوق الملكية الكاملة بواسطة: <strong style="color:#4f46e5; font-size:13px;">أماني محمد السيد</strong> (Amany Mohamed El-Sayed) © 2025 - 2026
+            </div>
+        </div>
+    </footer>
+
+    <script src="core/security.js"></script>
+    <script src="core/audit.js"></script>
+    <script src="core/barcode.js"></script>
+    <script src="core/attendance.js"></script>
+    <script src="database.js"></script>
+    <script src="utils.js"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>
